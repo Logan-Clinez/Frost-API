@@ -816,7 +816,7 @@ export default class ServerManager {
   
     // Directly use the response time value
     const extractedTime = time.response
-    .match(/(\d+\.\d+)/)?.[0] || null;
+    .match(/(\d+)/)?.[0] || null;
   
     if (extractedTime) {
       this._manager.events.emit(RCEEvent.ServerTimeUpdated, {
