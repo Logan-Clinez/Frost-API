@@ -706,52 +706,66 @@ export default class ServerManager {
         `[${identifier}] Failed To Update Players: Invalid Server`
       );
     }
-
+  
     this._manager.logger.debug(`[${server.identifier}] Updating Players`);
-
-    const players = await this.command(server.identifier, "Users", true);
-    if (!players?.response) {
-      return this._manager.logger.warn(
-        `[${server.identifier}] Failed To Update Players`
-      );
-    }
-
+  
+    server.retryCounts = server.retryCounts || { players: 0 };
+  
+    const fetchPlayersWithRetry = async (): Promise<any> => {
+      let attempt = 0;
+      while (true) {
+        attempt += 1;
+        const response = await this.command(server.identifier, "Users", true);
+  
+        if (response?.response) {
+          server.retryCounts.players = 0;
+          return response;
+        }
+  
+        server.retryCounts.players = attempt;
+  
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+      }
+    };
+  
+    const players = await fetchPlayersWithRetry();
+  
     const playerlist = players.response
       .match(/"(.*?)"/g)
       .map((ign) => ign.replace(/"/g, ""));
     playerlist.shift();
-
+  
     const { joined, left } = Helper.comparePopulation(
       server.players,
       playerlist
     );
-
+  
     joined.forEach((player) => {
       this._manager.events.emit(RCEEvent.PlayerJoined, {
         server,
         ign: player,
       });
     });
-
+  
     left.forEach((player) => {
       this._manager.events.emit(RCEEvent.PlayerLeft, {
         server,
         ign: player,
       });
     });
-
+  
     server.players = playerlist;
     this.update(server);
-
+  
     this._manager.events.emit(RCEEvent.PlayerListUpdated, {
       server,
       players: playerlist,
       joined,
       left,
     });
-
+  
     this._manager.logger.debug(`[${server.identifier}] Players Updated`);
-  }
+  }  
 
   /**
    *
