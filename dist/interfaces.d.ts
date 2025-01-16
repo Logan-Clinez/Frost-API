@@ -100,7 +100,7 @@ export interface SpecialEventSetEventPayload extends EventPayload {
     event: "Easter" | "Halloween" | "Xmas" | "HalloweenPortal" | "XmasPortal";
 }
 export interface EventStartEventPayload extends EventPayload {
-    event: "Airdrop" | "Cargo Ship" | "Chinook" | "Patrol Helicopter" | "Halloween" | "Christmas" | "Small Oil Rig" | "Oil Rig" | "Bradley APC Debris" | "Patrol Helicopter Debris";
+    event: "Airdrop" | "Cargo Ship" | "Chinook" | "Patrol Helicopter" | "Halloween" | "Christmas" | "Small Oil Rig" | "Oil Rig" | "Bradley APC Debris" | "Patrol Helicopter Debris" | "Bradley Event";
     special: boolean;
 }
 export interface PlayerKillEventPayload extends EventPayload {
