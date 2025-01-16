@@ -338,20 +338,27 @@ export default class ServerManager {
       ServerUtils.error(this._manager, `[${identifier}] Invalid Server`);
       return null;
     }
-
-    const info = await this.command(server.identifier, "serverinfo", true);
-    if (!info?.response) {
-      ServerUtils.error(this._manager, "Failed To Fetch Server Info", server);
-      return null;
+  
+    let retries = 0;
+    const maxRetries = 5;
+  
+    while (retries < maxRetries) {
+      const info = await this.command(server.identifier, "serverinfo", true);
+      if (info?.response) {
+        const data: RustServerInformation = Helper.cleanOutput(info.response, true, rawHostname);
+        return data;
+      }
+  
+      retries++;
+      this._manager.logger.warn(`[${identifier}] Retry ${retries}/${maxRetries}: Failed to Fetch Server Info`);
+      
+      // Wait before retrying (e.g., 2 seconds)
+      await new Promise(resolve => setTimeout(resolve, retries * 2000));
     }
-
-    const data: RustServerInformation = Helper.cleanOutput(
-      info.response,
-      true,
-      rawHostname
-    );
-    return data;
-  }
+  
+    ServerUtils.error(this._manager, "Failed To Fetch Server Info After 5 Retries", server);
+    return null;
+  }  
 
   /**
    *
