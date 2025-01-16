@@ -599,7 +599,7 @@ class ServerManager {
             const extractedTime = response.response
                 .match(/(\d+)/)?.[0] || null;
             if (extractedTime) {
-                this._manager.events.emit(constants_1.RCEEvent.Time, {
+                this._manager.events.emit(constants_1.RCEEvent.ServerTime, {
                     server,
                     time: extractedTime,
                 });
