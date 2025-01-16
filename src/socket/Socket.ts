@@ -139,10 +139,6 @@ export default class GPortalSocket {
             if (match) {
               const status = match[1].trim();
               if (status === "StatusCode.UNAVAILABLE") {
-                this._manager.logger.warn(
-                  `[${server.identifier}] AioRpcError: Server Is Unavailable, Recreating in 2 Minutes...`
-                );
-
                 this._manager.servers.remove(server);
                 setTimeout(
                   () =>
