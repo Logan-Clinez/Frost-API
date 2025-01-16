@@ -111,7 +111,7 @@ class ServerManager {
                             if (s?.status === "RUNNING") {
                                 this.updatePlayers(opts.identifier);
                             }
-                        }, 20000)
+                        }, 30000)
                         : undefined,
                 },
                 radioRefreshing: {
@@ -122,7 +122,7 @@ class ServerManager {
                             if (s?.status === "RUNNING") {
                                 this.updateBroadcasters(opts.identifier);
                             }
-                        }, 20000)
+                        }, 30000)
                         : undefined,
                 },
                 extendedEventRefreshing: {
@@ -133,7 +133,7 @@ class ServerManager {
                             if (s?.status === "RUNNING") {
                                 this.fetchGibs(opts.identifier);
                             }
-                        }, 20000)
+                        }, 30000)
                         : undefined,
                 },
             },
@@ -286,7 +286,6 @@ class ServerManager {
             }
             retries++;
             this._manager.logger.warn(`[${identifier}] Retry ${retries}/${maxRetries}: Failed to Fetch Server Info`);
-            // Wait before retrying (e.g., 2 seconds)
             await new Promise(resolve => setTimeout(resolve, retries * 2000));
         }
         ServerUtils_1.default.error(this._manager, "Failed To Fetch Server Info After 5 Retries", server);
