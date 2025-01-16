@@ -9,6 +9,8 @@ enum ConsoleColor {
   FgGreen = "\x1b[32m",
   FgYellow = "\x1b[33m",
   FgCyan = "\x1b[36m",
+  Bold = "\x1b[1m",  // Added bold for emphasis
+  Underline = "\x1b[4m"  // Added underline for emphasis
 }
 
 export default class RCELogger implements ILogger {
@@ -64,9 +66,9 @@ export default class RCELogger implements ILogger {
 
     if (this.logLevel !== LogLevel.None && level <= this.logLevel) {
       const date = new Date();
-      const timestamp = date.toLocaleTimeString([], { hour12: false });
+      const timestamp = date.toLocaleTimeString([], { hour12: true });
       const padding = " ".repeat(Math.max(0, 15 - logType.prefix.length));
-      const formattedMessage = `\x1b[90m[${timestamp}]\x1b[0m ${logType.color}${logType.prefix}${padding}${logType.emoji}${ConsoleColor.Reset}`;
+      const formattedMessage = `${ConsoleColor.FgCyan}${ConsoleColor.Bold}[${timestamp}]${ConsoleColor.Reset} ${logType.color}${logType.prefix} ${padding}${logType.emoji}${ConsoleColor.Reset}`;
 
       console.log(formattedMessage, this.format(message));
     }
@@ -85,7 +87,7 @@ export default class RCELogger implements ILogger {
   debug(message: string) {
     const logType: LogType = {
       prefix: "[DEBUG]",
-      emoji: "🔧 ",
+      emoji: "🔧",
       color: ConsoleColor.FgGreen,
     };
 
@@ -105,11 +107,16 @@ export default class RCELogger implements ILogger {
   error(message: string) {
     const logType: LogType = {
       prefix: "[ERROR]",
-      emoji: "❌ ",
+      emoji: "❌",
       color: ConsoleColor.FgRed,
     };
 
     this.log(LogLevel.Error, logType, message);
+
+    // Optionally log stack trace if it's an error object
+    if (message instanceof Error) {
+      console.error(ConsoleColor.FgRed + message.stack + ConsoleColor.Reset);
+    }
   }
 
   /**
@@ -125,7 +132,7 @@ export default class RCELogger implements ILogger {
   info(message: string) {
     const logType: LogType = {
       prefix: "[INFO]",
-      emoji: "💬 ",
+      emoji: "💬",
       color: ConsoleColor.FgCyan,
     };
 
@@ -145,7 +152,7 @@ export default class RCELogger implements ILogger {
   warn(message: string) {
     const logType: LogType = {
       prefix: "[WARNING]",
-      emoji: "⚠️ ",
+      emoji: "⚠️",
       color: ConsoleColor.FgYellow,
     };
 
