@@ -4,12 +4,12 @@
 
 ## Documentation
 
-For a more in-depth documentation, refer to [GitBook](https://rcejs.gitbook.io/rcejs)! You can also join our support [discord server](https://discord.gg/npYygkeXSa)
+For a more in-depth documentation, refer to [GitBook](https://frosty-bot-api.gitbook.io/docs/)! You can also join our support [discord server](https://discord.gg/Frost3X)
 
 ## Installation
 
 ```bash
-npm i b1nzeex/rce.js
+npm i Logan-Clinez/Frost-API
 ```
 
 ## Example Usage - TypeScript
