@@ -669,7 +669,7 @@ export default class ServerManager {
       true
     );
 
-    if (!bradley?.response || !heli?.response || brad?.response) {
+    if (!bradley?.response || !heli?.response || !brad?.response) {
       return this._manager.logger.warn(
         `[${server.identifier}] Failed To Fetch Gibs`
       );
