@@ -619,24 +619,22 @@ class ServerManager {
             let attempt = 0;
             while (true) {
                 attempt += 1;
-                const response = await this.command(server.identifier, "Time", true);
+                const response = await this.command(server.identifier, "env.time", true);
                 if (response?.response) {
                     server.retryCounts.time = 0;
                     return response;
                 }
                 server.retryCounts.time = attempt;
-                // Wait before retrying, with increasing wait times
                 await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
             }
         };
         const time = await fetchTimeWithRetry();
-        // Directly use the response time value
         const extractedTime = time.response
             .match(/(\d+)/)?.[0] || null;
         if (extractedTime) {
-            this._manager.events.emit(constants_1.RCEEvent.ServerTimeUpdated, {
+            this._manager.events.emit(constants_1.RCEEvent.Time, {
                 server,
-                time: extractedTime, // Emit the extracted time
+                time: extractedTime,
             });
             this._manager.logger.debug(`[${server.identifier}] Time Updated: ${extractedTime}`);
         }
