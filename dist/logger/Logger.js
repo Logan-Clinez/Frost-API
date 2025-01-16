@@ -74,7 +74,7 @@ class RCELogger {
     debug(message) {
         const logType = {
             prefix: "[DEBUG]",
-            emoji: "🔧",
+            emoji: "🔧 ",
             color: ConsoleColor.FgGreen,
         };
         this.log(constants_1.LogLevel.Debug, logType, message);
@@ -92,7 +92,7 @@ class RCELogger {
     error(message) {
         const logType = {
             prefix: "[ERROR]",
-            emoji: "❌",
+            emoji: "❌ ",
             color: ConsoleColor.FgRed,
         };
         this.log(constants_1.LogLevel.Error, logType, message);
@@ -110,7 +110,7 @@ class RCELogger {
     info(message) {
         const logType = {
             prefix: "[INFO]",
-            emoji: "💬",
+            emoji: "💬 ",
             color: ConsoleColor.FgCyan,
         };
         this.log(constants_1.LogLevel.Info, logType, message);
