@@ -527,7 +527,7 @@ class ServerManager {
         const heli = await this.command(server.identifier, "find_entity servergibs_patrolhelicopter", true);
         const brad = await this.command(server.identifier, "find_entity brad", // added brad check
         true);
-        if (!bradley?.response || !heli?.response || brad?.response) {
+        if (!bradley?.response || !heli?.response || !brad?.response) {
             return this._manager.logger.warn(`[${server.identifier}] Failed To Fetch Gibs`);
         }
         if (bradley.response.includes("servergibs_bradley") &&
