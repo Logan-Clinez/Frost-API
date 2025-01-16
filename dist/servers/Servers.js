@@ -686,7 +686,7 @@ class ServerManager {
                 .map((s) => {
                 return {
                     rawName: s.items[0].label,
-                    name: s.items[0].label.replace(/<[^>]+>/g, ""),
+                    name: s.items[0].label.replace(/<color=[^>]+>|<\/color>/g, ""),
                     region,
                     sid: [Number(s.items[0].data.url.split("/")[4])],
                 };
