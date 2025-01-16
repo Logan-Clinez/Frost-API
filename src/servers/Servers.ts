@@ -144,53 +144,33 @@ export default class ServerManager {
           enabled: opts.playerRefreshing ?? false,
           interval: opts.playerRefreshing
             ? setInterval(() => {
-                const s = this.get(opts.identifier);
-                if (s?.status === "RUNNING") {
-                  this.updatePlayers(opts.identifier);
-                }
-              }, 60000)
+              const s = this.get(opts.identifier);
+              if (s?.status === "RUNNING") {
+                this.updatePlayers(opts.identifier);
+              }
+            }, 60000)
             : undefined,
         },
         radioRefreshing: {
           enabled: opts.radioRefreshing ?? false,
           interval: opts.radioRefreshing
             ? setInterval(() => {
-                const s = this.get(opts.identifier);
-                if (s?.status === "RUNNING") {
-                  this.updateBroadcasters(opts.identifier);
-                }
-              }, 60000)
+              const s = this.get(opts.identifier);
+              if (s?.status === "RUNNING") {
+                this.updateBroadcasters(opts.identifier);
+              }
+            }, 60000)
             : undefined,
         },
         extendedEventRefreshing: {
           enabled: opts.extendedEventRefreshing ?? false,
           interval: opts.extendedEventRefreshing
             ? setInterval(() => {
-                const s = this.get(opts.identifier);
-                if (s?.status === "RUNNING") {
-                  this.fetchGibs(opts.identifier);
-                }
-              }, 60000)
-            : undefined,
-        },
-        timeRefreshing: {
-          enabled: opts.timeRefreshing ?? true, // Default to true
-          interval: opts.timeRefreshing
-            ? setInterval(() => {
-                const s = this.get(opts.identifier);
-                if (s) {
-                  const previousTime = s.time;
-                  const currentTime = Date.now();
-                  s.time = currentTime;
-    
-                  // Emit a time update event
-                  this._manager.events.emit(RCEEvent.TimeUpdated, {
-                    server: s,
-                    previousTime,
-                    currentTime,
-                  });
-                }
-              }, 60000)
+              const s = this.get(opts.identifier);
+              if (s?.status === "RUNNING") {
+                this.fetchGibs(opts.identifier);
+              }
+            }, 60000)
             : undefined,
         },
       },
@@ -200,10 +180,9 @@ export default class ServerManager {
       players: [],
       frequencies: [],
       intents: opts.intents,
-      retryCounts: undefined,
-      time: 0, // Initialize time as 0
+      retryCounts: undefined
     });
-        
+
     const server = this._servers.get(opts.identifier);
     this._socket.addServer(server);
 
@@ -786,63 +765,7 @@ export default class ServerManager {
     });
   
     this._manager.logger.debug(`[${server.identifier}] Players Updated`);
-  }
-  
-  private async updateTime(identifier: string) {
-    const server = this.get(identifier);
-    if (!server) {
-      return this._manager.logger.warn(
-        `[${identifier}] Failed To Update Time: Invalid Server`
-      );
-    }
-  
-    this._manager.logger.debug(`[${server.identifier}] Updating Time`);
-  
-    server.retryCounts = server.retryCounts || { time: 0 };
-  
-    const fetchTimeWithRetry = async (): Promise<any> => {
-      let attempt = 0;
-      while (true) {
-        attempt += 1;
-        const response = await this.command(server.identifier, "Time", true);
-  
-        if (response?.response) {
-          server.retryCounts.time = 0;
-          return response;
-        }
-  
-        server.retryCounts.time = attempt;
-  
-        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
-      }
-    };
-  
-    const timeData = await fetchTimeWithRetry();
-  
-    // Extract the time value using a regex
-    const timeMatch = timeData.response.match(/env\.time:\s*"(.*?)"/);
-    if (!timeMatch) {
-      return this._manager.logger.warn(
-        `[${server.identifier}] Failed To Parse Time Response`
-      );
-    }
-  
-    const currentTime = parseFloat(timeMatch[1]);
-    const previousTime = server.time || null;
-  
-    if (previousTime !== currentTime) {
-      server.time = currentTime;
-      this._manager.events.emit(RCEEvent.TimeUpdated, {
-        server,
-        previousTime,
-        currentTime,
-      });
-    }
-  
-    this.update(server);
-  
-    this._manager.logger.debug(`[${server.identifier}] Time Updated`);
-  }
+  }  
 
   /**
    *

@@ -346,7 +346,6 @@ export enum RCEEvent {
   FrequencyGained = "FREQUENCY_GAINED",
   FrequencyLost = "FREQUENCY_LOST",
   Error = "ERROR",
-  TimeUpdated = "TIME_UPDATED",
 }
 
 export enum QuickChat {
