@@ -1,4 +1,5 @@
 export interface ServerOptions {
+  timeRefreshing: boolean;
   identifier: string;
   serverId: number | number[];
   region: "EU" | "US";
@@ -17,6 +18,7 @@ export interface FetchedServer {
 }
 
 export interface RustServer {
+  time: number | null;
   retryCounts: any;
   identifier: string;
   serverId: number[]; // url, backend
@@ -42,6 +44,7 @@ interface RustServerIntervals {
   playerRefreshing?: { enabled: boolean; interval?: NodeJS.Timeout };
   radioRefreshing?: { enabled: boolean; interval?: NodeJS.Timeout };
   extendedEventRefreshing?: { enabled: boolean; interval?: NodeJS.Timeout };
+  timeRefreshing?: { enabled: boolean; interval?: NodeJS.Timeout; };
 }
 
 export interface CommandRequest {
