@@ -111,7 +111,7 @@ class ServerManager {
                             if (s?.status === "RUNNING") {
                                 this.updatePlayers(opts.identifier);
                             }
-                        }, 60000)
+                        }, 10000)
                         : undefined,
                 },
                 radioRefreshing: {
@@ -122,7 +122,7 @@ class ServerManager {
                             if (s?.status === "RUNNING") {
                                 this.updateBroadcasters(opts.identifier);
                             }
-                        }, 30000)
+                        }, 10000)
                         : undefined,
                 },
                 extendedEventRefreshing: {
@@ -133,7 +133,7 @@ class ServerManager {
                             if (s?.status === "RUNNING") {
                                 this.fetchGibs(opts.identifier);
                             }
-                        }, 60000)
+                        }, 10000)
                         : undefined,
                 },
             },
