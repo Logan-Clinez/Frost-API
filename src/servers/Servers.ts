@@ -174,23 +174,23 @@ export default class ServerManager {
             : undefined,
         },
         timeRefreshing: {
-          enabled: opts.timeRefreshing ?? true,
+          enabled: opts.timeRefreshing ?? false,
           interval: opts.timeRefreshing
             ? setInterval(() => {
                 const s = this.get(opts.identifier);
                 if (s?.status === "RUNNING") {
-                  this.ServerTime(opts.identifier); // Call the new updateTime method
+                  this.ServerTime(opts.identifier);
                 }
               }, 60000)
             : undefined,
         },
         fpsRefreshing: {
-          enabled: opts.fpsRefreshing ?? true,
+          enabled: opts.fpsRefreshing ?? false,
           interval: opts.fpsRefreshing
             ? setInterval(() => {
                 const s = this.get(opts.identifier);
                 if (s?.status === "RUNNING") {
-                  this.ServerFPS(opts.identifier); // Call the updateFPS method to refresh FPS
+                  this.ServerFPS(opts.identifier);
                 }
               }, 60000)
             : undefined,
@@ -202,7 +202,6 @@ export default class ServerManager {
       players: [],
       frequencies: [],
       intents: opts.intents,
-      retryCounts: undefined
     });
 
     const server = this._servers.get(opts.identifier);
@@ -228,11 +227,11 @@ export default class ServerManager {
       }
 
       if (opts.timeRefreshing) {
-        await this.ServerTime(opts.identifier); // Directly calling updateTime here if required
+        await this.ServerTime(opts.identifier);
       }
 
       if (opts.fpsRefreshing) {
-        await this.ServerFPS(opts.identifier); // Directly calling updateTime here if required
+        await this.ServerFPS(opts.identifier);
       }
     }
 
@@ -548,46 +547,33 @@ export default class ServerManager {
     }
   }
 
-  private async updateBroadcasters(identifier: string) {
+  private async updateBroadcasters(identifier) {
     const server = this.get(identifier);
     if (!server) {
       return this._manager.logger.warn(
         `[${identifier}] Failed To Update Broadcasters: Invalid Server`
       );
     }
-  
+
     this._manager.logger.debug(`[${server.identifier}] Updating Broadcasters`);
-  
-    server.retryCounts = server.retryCounts || { broadcasters: 0 };
-  
-    const fetchBroadcastersWithRetry = async (): Promise<any> => {
-      let attempt = 0;
-      while (true) {
-        attempt += 1;
-        const response = await this.command(
-          server.identifier,
-          "rf.listboardcaster",
-          true
-        );
-  
-        if (response?.response) {
-          server.retryCounts.broadcasters = 0;
-          return response;
-        }
-  
-        server.retryCounts.broadcasters = attempt;
-  
-        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
-      }
-    };
-  
-    const broadcasters = await fetchBroadcastersWithRetry();
-  
+
+    const broadcasters = await this.command(
+      server.identifier,
+      "rf.listboardcaster",
+      true
+    );
+    if (!broadcasters?.response) {
+      return this._manager.logger.warn(
+        `[${server.identifier}] Failed To Update Broadcasters`
+      );
+    }
+
     const broadcasts = [];
+
     const regex =
       /\[(\d+) MHz\] Position: \(([\d.-]+), ([\d.-]+), ([\d.-]+)\), Range: (\d+)/g;
-    let match: string[];
-  
+    let match;
+
     while ((match = regex.exec(broadcasters.response)) !== null) {
       const frequency = parseInt(match[1], 10);
       const coordinates = [
@@ -596,25 +582,25 @@ export default class ServerManager {
         parseFloat(match[4]),
       ];
       const range = parseInt(match[5], 10);
-  
+
       broadcasts.push({ frequency, coordinates, range });
     }
-  
+
     server.frequencies.forEach((freq) => {
       if (!broadcasts.find((b) => parseInt(b.frequency) === freq)) {
         this._manager.events.emit(RCEEvent.FrequencyLost, {
           server,
           frequency: freq,
         });
-  
+
         server.frequencies = server.frequencies.filter((f) => f !== freq);
       }
     });
-  
+
     broadcasts.forEach((broadcast) => {
       if (server.frequencies.includes(broadcast.frequency)) return;
       server.frequencies.push(broadcast.frequency);
-  
+
       if (broadcast.frequency === 4765) {
         this._manager.events.emit(RCEEvent.EventStart, {
           server,
@@ -628,7 +614,7 @@ export default class ServerManager {
           special: false,
         });
       }
-  
+
       this._manager.events.emit(RCEEvent.FrequencyGained, {
         server,
         frequency: broadcast.frequency,
@@ -636,11 +622,11 @@ export default class ServerManager {
         range: broadcast.range,
       });
     });
-  
+
     this.update(server);
-  
+
     this._manager.logger.debug(`[${server.identifier}] Broadcasters Updated`);
-  }  
+  }
 
   private async fetchGibs(identifier: string) {
     const server = this.get(identifier);
@@ -663,13 +649,7 @@ export default class ServerManager {
       true
     );
 
-    const brad = await this.command(
-      server.identifier,
-      "find_entity brad", // added brad check
-      true
-    );
-
-    if (!bradley?.response || !heli?.response || !brad?.response) {
+    if (!bradley?.response || !heli?.response) {
       return this._manager.logger.warn(
         `[${server.identifier}] Failed To Fetch Gibs`
       );
@@ -717,28 +697,6 @@ export default class ServerManager {
       });
     }
 
-  // New Bradley Event based on "brad"
-  if (
-    brad.response.includes("bradleyapc") &&
-    !server.flags.includes("BRAD")
-  ) {
-    server.flags.push("BRAD");
-
-    setTimeout(() => {
-      const s = this.get(server.identifier);
-      if (s) {
-        s.flags = s.flags.filter((f) => f !== "BRAD");
-        this.update(s);
-      }
-    }, 60_000 * 10);
-
-    this._manager.events.emit(RCEEvent.EventStart, {
-      server,
-      event: "Bradley Event",
-      special: false,
-    });
-  }
-
     this.update(server);
 
     this._manager.logger.debug(`[${server.identifier}] Gibs Fetched`);
@@ -751,67 +709,53 @@ export default class ServerManager {
         `[${identifier}] Failed To Update Players: Invalid Server`
       );
     }
-  
+
     this._manager.logger.debug(`[${server.identifier}] Updating Players`);
-  
-    server.retryCounts = server.retryCounts || { players: 0 };
-  
-    const fetchPlayersWithRetry = async (): Promise<any> => {
-      let attempt = 0;
-      while (true) {
-        attempt += 1;
-        const response = await this.command(server.identifier, "Users", true);
-  
-        if (response?.response) {
-          server.retryCounts.players = 0;
-          return response;
-        }
-  
-        server.retryCounts.players = attempt;
-  
-        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
-      }
-    };
-  
-    const players = await fetchPlayersWithRetry();
-  
+
+    const players = await this.command(server.identifier, "Users", true);
+    if (!players?.response) {
+      return this._manager.logger.warn(
+        `[${server.identifier}] Failed To Update Players`
+      );
+    }
+
     const playerlist = players.response
       .match(/"(.*?)"/g)
       .map((ign) => ign.replace(/"/g, ""));
     playerlist.shift();
-  
+
     const { joined, left } = Helper.comparePopulation(
       server.players,
       playerlist
     );
-  
+
     joined.forEach((player) => {
       this._manager.events.emit(RCEEvent.PlayerJoined, {
         server,
         ign: player,
       });
     });
-  
+
     left.forEach((player) => {
       this._manager.events.emit(RCEEvent.PlayerLeft, {
         server,
         ign: player,
       });
     });
-  
+
     server.players = playerlist;
     this.update(server);
-  
+
     this._manager.events.emit(RCEEvent.PlayerListUpdated, {
       server,
       players: playerlist,
       joined,
       left,
     });
-  
+
     this._manager.logger.debug(`[${server.identifier}] Players Updated`);
   }
-  
+
   private async ServerTime(identifier: string) {
     const server = this.get(identifier);
     if (!server) {
@@ -819,44 +763,29 @@ export default class ServerManager {
         `[${identifier}] Failed To Update Time: Invalid Server`
       );
     }
-
+  
     this._manager.logger.debug(`[${server.identifier}] Updating Time`);
-
-    server.retryCounts = server.retryCounts || { time: 0 };
-
-    const fetchTimeWithRetry = async (): Promise<any> => {
-      let attempt = 0;
-      while (true) {
-        attempt += 1;
-        const response = await this.command(server.identifier, "env.time", true);
-
-        if (response?.response) {
-          server.retryCounts.time = 0;
-          return response;
-        }
-
-        server.retryCounts.time = attempt;
-
-        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+  
+    const response = await this.command(server.identifier, "env.time", true);
+  
+    if (response?.response) {
+      const extractedTime = response.response
+        .match(/(\d+)/)?.[0] || null;
+  
+      if (extractedTime) {
+        this._manager.events.emit(RCEEvent.Time, {
+          server,
+          time: extractedTime,
+        });
+  
+        this._manager.logger.debug(`[${server.identifier}] Time Updated: ${extractedTime}`);
+      } else {
+        this._manager.logger.warn(`[${server.identifier}] Failed To Retrieve Valid Time`);
       }
-    };
-
-    const time = await fetchTimeWithRetry();
-
-    const extractedTime = time.response
-      .match(/(\d+)/)?.[0] || null;
-
-    if (extractedTime) {
-      this._manager.events.emit(RCEEvent.Time, {
-        server,
-        time: extractedTime,
-      });
-
-      this._manager.logger.debug(`[${server.identifier}] Time Updated: ${extractedTime}`);
     } else {
-      this._manager.logger.warn(`[${server.identifier}] Failed To Retrieve Valid Time`);
+      this._manager.logger.warn(`[${server.identifier}] Failed To Retrieve Time`);
     }
-  }
+  }  
 
   private async ServerFPS(identifier: string) {
     const server = this.get(identifier);
@@ -868,39 +797,23 @@ export default class ServerManager {
   
     this._manager.logger.debug(`[${server.identifier}] Updating FPS`);
   
-    server.retryCounts = server.retryCounts || { fps: 0 };
+    const response = await this.command(server.identifier, "server.fps", true);
   
-    const fetchFPSWithRetry = async (): Promise<any> => {
-      let attempt = 0;
-      while (true) {
-        attempt += 1;
-        const response = await this.command(server.identifier, "server.fps", true);
+    if (response?.response) {
+      const FPS = response.response;
   
-        if (response?.response) {
-          server.retryCounts.fps = 0;
-          return response;
-        }
+      if (FPS) {
+        this._manager.events.emit(RCEEvent.ServerFPS, {
+          server,
+          fps: FPS,
+        });
   
-        server.retryCounts.fps = attempt;
-  
-        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+        this._manager.logger.debug(`[${server.identifier}] FPS Updated: ${FPS}`);
+      } else {
+        this._manager.logger.warn(`[${server.identifier}] Failed To Retrieve Valid FPS`);
       }
-    };
-  
-    const fps = await fetchFPSWithRetry();
-  
-    const FPS = fps.response;
-  
-    if (FPS) {
-      // Emit the FPS update event
-      this._manager.events.emit(RCEEvent.ServerFPS, {
-        server,
-        fps: FPS,
-      });
-  
-      this._manager.logger.debug(`[${server.identifier}] FPS Updated: ${FPS}`);
     } else {
-      this._manager.logger.warn(`[${server.identifier}] Failed To Retrieve Valid FPS`);
+      this._manager.logger.warn(`[${server.identifier}] Failed To Retrieve FPS`);
     }
   }  
 
@@ -965,7 +878,7 @@ export default class ServerManager {
         .map((s) => {
           return {
             rawName: s.items[0].label,
-            name: s.items[0].label.replace(/<color=[^>]+>|<\/color>/g, ""),
+            name: s.items[0].label.replace(/<[^>]+>/g, ""),
             region,
             sid: [Number(s.items[0].data.url.split("/")[4])],
           };
