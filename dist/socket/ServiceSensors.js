@@ -7,7 +7,7 @@ class ServiceSensorHandler {
         manager.events.emit(constants_1.RCEEvent.ServiceSensor, {
             server,
             cpuPercentage: Number(cpuTotal.toFixed(2)),
-            memoryUsed: memory.used / 1024,
+            memoryUsed: Number(memory.used),
         });
     }
 }
