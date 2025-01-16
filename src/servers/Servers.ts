@@ -148,7 +148,7 @@ export default class ServerManager {
               if (s?.status === "RUNNING") {
                 this.updatePlayers(opts.identifier);
               }
-            }, 10000)
+            }, 20000)
             : undefined,
         },
         radioRefreshing: {
@@ -159,7 +159,7 @@ export default class ServerManager {
               if (s?.status === "RUNNING") {
                 this.updateBroadcasters(opts.identifier);
               }
-            }, 10000)
+            }, 20000)
             : undefined,
         },
         extendedEventRefreshing: {
@@ -170,7 +170,7 @@ export default class ServerManager {
               if (s?.status === "RUNNING") {
                 this.fetchGibs(opts.identifier);
               }
-            }, 10000)
+            }, 20000)
             : undefined,
         },
       },
