@@ -630,8 +630,8 @@ class ServerManager {
             }
         };
         const time = await fetchTimeWithRetry();
-        // Apply regex directly to extract the numeric time (including decimals) from the response
-        const extractedTime = time.response?.env?.time?.match(/\d+(\.\d+)?/)?.[0] || null;
+        // Directly use the response time value
+        const extractedTime = time.response?.env?.time || null;
         if (extractedTime) {
             this._manager.events.emit(constants_1.RCEEvent.ServerTimeUpdated, {
                 server,
