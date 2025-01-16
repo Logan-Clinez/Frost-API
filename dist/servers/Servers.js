@@ -326,7 +326,61 @@ class ServerManager {
             },
             query: "mutation sendConsoleMessage($sid: Int!, $region: REGION!, $message: String!) {\n  sendConsoleMessage(rsid: {id: $sid, region: $region}, message: $message) {\n    ok\n    __typename\n  }\n}",
         };
-        const retryCommand = async (attempt = 1) => {
+        if (response) {
+            return new Promise(async (resolve, reject) => {
+                CommandHandler_1.default.add({
+                    identifier,
+                    command,
+                    resolve,
+                    reject,
+                });
+                try {
+                    const response = await fetch(constants_1.GPortalRoutes.Api, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify(payload),
+                    });
+                    if (!response.ok) {
+                        ServerUtils_1.default.error(this._manager, `Failed To Send Command: HTTP ${response.status} ${response.statusText}`, server);
+                        CommandHandler_1.default.remove(CommandHandler_1.default.get(identifier, command));
+                        resolve({
+                            ok: false,
+                            error: `HTTP ${response.status} ${response.statusText}`,
+                        });
+                    }
+                    const data = await response.json();
+                    if (!data?.data?.sendConsoleMessage?.ok) {
+                        ServerUtils_1.default.error(this._manager, "Failed To Send Command: AioRpcError", server);
+                        CommandHandler_1.default.remove(CommandHandler_1.default.get(identifier, command));
+                        resolve({
+                            ok: false,
+                            error: "AioRpcError",
+                        });
+                    }
+                    const cmd = CommandHandler_1.default.get(identifier, command);
+                    if (cmd) {
+                        cmd.timeout = setTimeout(() => {
+                            CommandHandler_1.default.remove(CommandHandler_1.default.get(identifier, command));
+                            resolve({
+                                ok: true,
+                                response: undefined,
+                            });
+                        }, 3_000);
+                    }
+                }
+                catch (error) {
+                    CommandHandler_1.default.remove(CommandHandler_1.default.get(identifier, command));
+                    resolve({
+                        ok: false,
+                        error: error.message,
+                    });
+                }
+            });
+        }
+        else {
             try {
                 const response = await fetch(constants_1.GPortalRoutes.Api, {
                     method: "POST",
@@ -337,40 +391,11 @@ class ServerManager {
                     body: JSON.stringify(payload),
                 });
                 if (!response.ok) {
-                    if (attempt < 5) {
-                        this._manager.logger.warn(`[${identifier}] Retry ${attempt}/5: Failed To Send Command (HTTP ${response.status} ${response.statusText})`);
-                        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
-                        return retryCommand(attempt + 1);
-                    }
-                    else {
-                        ServerUtils_1.default.error(this._manager, `Failed To Send Command: HTTP ${response.status} ${response.statusText}`, server);
-                        return {
-                            ok: false,
-                            error: `HTTP ${response.status} ${response.statusText}`,
-                        };
-                    }
-                }
-                const data = await response.json();
-                if (!data?.data?.sendConsoleMessage?.ok) {
-                    if (attempt < 5) {
-                        this._manager.logger.warn(`[${identifier}] Retry ${attempt}/5: Failed To Send Command (AioRpcError)`);
-                        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
-                        return retryCommand(attempt + 1);
-                    }
-                    else {
-                        ServerUtils_1.default.error(this._manager, "Failed To Send Command: AioRpcError", server);
-                        return { ok: false, error: "AioRpcError" };
-                    }
-                }
-                const cmd = CommandHandler_1.default.get(identifier, command);
-                if (cmd) {
-                    cmd.timeout = setTimeout(() => {
-                        CommandHandler_1.default.remove(CommandHandler_1.default.get(identifier, command));
-                        resolve({
-                            ok: true,
-                            response: undefined,
-                        });
-                    }, 3_000);
+                    ServerUtils_1.default.error(this._manager, `Failed To Send Command: HTTP ${response.status} ${response.statusText}`, server);
+                    return {
+                        ok: false,
+                        error: `HTTP ${response.status} ${response.statusText}`,
+                    };
                 }
                 return {
                     ok: true,
@@ -378,22 +403,12 @@ class ServerManager {
                 };
             }
             catch (error) {
-                if (attempt < 5) {
-                    this._manager.logger.warn(`[${identifier}] Retry ${attempt}/5: Failed To Send Command: ${error.message}`);
-                    await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
-                    return retryCommand(attempt + 1);
-                }
-                else {
-                    ServerUtils_1.default.error(this._manager, `Failed To Send Command: ${error.message}`, server);
-                    return { ok: false, error: error.message };
-                }
+                ServerUtils_1.default.error(this._manager, `Failed To Send Command: ${error}`, server);
+                return {
+                    ok: false,
+                    error: error.message,
+                };
             }
-        };
-        if (response) {
-            return retryCommand();
-        }
-        else {
-            return retryCommand();
         }
     }
     async updateBroadcasters(identifier) {
@@ -731,7 +746,4 @@ class ServerManager {
     }
 }
 exports.default = ServerManager;
-function resolve(arg0) {
-    throw new Error("Function not implemented.");
-}
 //# sourceMappingURL=Servers.js.map
