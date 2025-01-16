@@ -523,25 +523,13 @@ class ServerManager {
             return this._manager.logger.warn(`[${identifier}] Failed To Fetch Gibs: Invalid Server`);
         }
         this._manager.logger.debug(`[${server.identifier}] Fetching Gibs`);
-        server.retryCounts = server.retryCounts || { gibs: 0 };
-        const fetchGibsWithRetry = async () => {
-            let attempt = 0;
-            while (true) {
-                attempt += 1;
-                const bradley = await this.command(server.identifier, "find_entity servergibs_bradley", true);
-                const heli = await this.command(server.identifier, "find_entity servergibs_patrolhelicopter", true);
-                const brad = await this.command(server.identifier, "find_entity brad", // added brad check
-                true);
-                if (bradley?.response && heli?.response && brad?.response) {
-                    server.retryCounts.gibs = 0;
-                    return { bradley, heli, brad }; // Include brad in the return object
-                }
-                server.retryCounts.gibs = attempt;
-                await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
-            }
-        };
-        const { bradley, heli, brad } = await fetchGibsWithRetry();
-        // Bradley Debris
+        const bradley = await this.command(server.identifier, "find_entity servergibs_bradley", true);
+        const heli = await this.command(server.identifier, "find_entity servergibs_patrolhelicopter", true);
+        const brad = await this.command(server.identifier, "find_entity brad", // added brad check
+        true);
+        if (!bradley?.response || !heli?.response || brad?.response) {
+            return this._manager.logger.warn(`[${server.identifier}] Failed To Fetch Gibs`);
+        }
         if (bradley.response.includes("servergibs_bradley") &&
             !server.flags.includes("BRADLEY")) {
             server.flags.push("BRADLEY");
@@ -558,7 +546,6 @@ class ServerManager {
                 special: false,
             });
         }
-        // Helicopter Debris
         if (heli.response.includes("servergibs_patrolhelicopter") &&
             !server.flags.includes("HELICOPTER")) {
             server.flags.push("HELICOPTER");
@@ -576,7 +563,7 @@ class ServerManager {
             });
         }
         // New Bradley Event based on "brad"
-        if (brad.response.includes("brad") && !server.flags.includes("BRAD")) {
+        if (brad.response.includes("bradleyapc") && !server.flags.includes("BRAD")) {
             server.flags.push("BRAD");
             setTimeout(() => {
                 const s = this.get(server.identifier);
