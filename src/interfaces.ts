@@ -136,7 +136,8 @@ export interface EventStartEventPayload extends EventPayload {
     | "Small Oil Rig"
     | "Oil Rig"
     | "Bradley APC Debris"
-    | "Patrol Helicopter Debris";
+    | "Patrol Helicopter Debris"
+    | "Bradley Event";
   special: boolean;
 }
 

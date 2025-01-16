@@ -668,10 +668,15 @@ export default class ServerManager {
           "find_entity servergibs_patrolhelicopter",
           true
         );
+        const brad = await this.command(
+          server.identifier,
+          "find_entity brad", // added brad check
+          true
+        );
   
-        if (bradley?.response && heli?.response) {
+        if (bradley?.response && heli?.response && brad?.response) {
           server.retryCounts.gibs = 0;
-          return { bradley, heli };
+          return { bradley, heli, brad }; // Include brad in the return object
         }
   
         server.retryCounts.gibs = attempt;
@@ -680,8 +685,9 @@ export default class ServerManager {
       }
     };
   
-    const { bradley, heli } = await fetchGibsWithRetry();
+    const { bradley, heli, brad } = await fetchGibsWithRetry();
   
+    // Bradley Debris
     if (
       bradley.response.includes("servergibs_bradley") &&
       !server.flags.includes("BRADLEY")
@@ -703,6 +709,7 @@ export default class ServerManager {
       });
     }
   
+    // Helicopter Debris
     if (
       heli.response.includes("servergibs_patrolhelicopter") &&
       !server.flags.includes("HELICOPTER")
@@ -720,6 +727,25 @@ export default class ServerManager {
       this._manager.events.emit(RCEEvent.EventStart, {
         server,
         event: "Patrol Helicopter Debris",
+        special: false,
+      });
+    }
+  
+    // New Bradley Event based on "brad"
+    if (brad.response.includes("brad") && !server.flags.includes("BRAD")) {
+      server.flags.push("BRAD");
+  
+      setTimeout(() => {
+        const s = this.get(server.identifier);
+        if (s) {
+          s.flags = s.flags.filter((f) => f !== "BRAD");
+          this.update(s);
+        }
+      }, 60_000 * 10);
+  
+      this._manager.events.emit(RCEEvent.EventStart, {
+        server,
+        event: "Bradley Event", // New event for "brad"
         special: false,
       });
     }
