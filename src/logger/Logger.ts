@@ -112,11 +112,6 @@ export default class RCELogger implements ILogger {
     };
 
     this.log(LogLevel.Error, logType, message);
-
-    // Optionally log stack trace if it's an error object
-    if (message instanceof Error) {
-      console.error(ConsoleColor.FgRed + message.stack + ConsoleColor.Reset);
-    }
   }
 
   /**
