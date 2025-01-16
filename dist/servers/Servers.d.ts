@@ -166,7 +166,8 @@ export default class ServerManager {
     private updateBroadcasters;
     private fetchGibs;
     private updatePlayers;
-    private updateTime;
+    private ServerTime;
+    private ServerFPS;
     /**
      *
      * @param region - The region to fetch servers from

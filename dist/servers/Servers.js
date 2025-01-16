@@ -142,7 +142,18 @@ class ServerManager {
                         ? setInterval(() => {
                             const s = this.get(opts.identifier);
                             if (s?.status === "RUNNING") {
-                                this.updateTime(opts.identifier); // Call the new updateTime method
+                                this.ServerTime(opts.identifier); // Call the new updateTime method
+                            }
+                        }, 60000)
+                        : undefined,
+                },
+                fpsRefreshing: {
+                    enabled: opts.fpsRefreshing ?? true,
+                    interval: opts.fpsRefreshing
+                        ? setInterval(() => {
+                            const s = this.get(opts.identifier);
+                            if (s?.status === "RUNNING") {
+                                this.ServerFPS(opts.identifier); // Call the updateFPS method to refresh FPS
                             }
                         }, 60000)
                         : undefined,
@@ -171,7 +182,10 @@ class ServerManager {
                 await this.fetchGibs(opts.identifier);
             }
             if (opts.timeRefreshing) {
-                await this.updateTime(opts.identifier); // Directly calling updateTime here if required
+                await this.ServerTime(opts.identifier); // Directly calling updateTime here if required
+            }
+            if (opts.fpsRefreshing) {
+                await this.ServerFPS(opts.identifier); // Directly calling updateTime here if required
             }
         }
         return true;
@@ -608,7 +622,7 @@ class ServerManager {
         });
         this._manager.logger.debug(`[${server.identifier}] Players Updated`);
     }
-    async updateTime(identifier) {
+    async ServerTime(identifier) {
         const server = this.get(identifier);
         if (!server) {
             return this._manager.logger.warn(`[${identifier}] Failed To Update Time: Invalid Server`);
@@ -640,6 +654,41 @@ class ServerManager {
         }
         else {
             this._manager.logger.warn(`[${server.identifier}] Failed To Retrieve Valid Time`);
+        }
+    }
+    async ServerFPS(identifier) {
+        const server = this.get(identifier);
+        if (!server) {
+            return this._manager.logger.warn(`[${identifier}] Failed To Update FPS: Invalid Server`);
+        }
+        this._manager.logger.debug(`[${server.identifier}] Updating FPS`);
+        server.retryCounts = server.retryCounts || { fps: 0 };
+        const fetchFPSWithRetry = async () => {
+            let attempt = 0;
+            while (true) {
+                attempt += 1;
+                const response = await this.command(server.identifier, "FPS", true); // Assume "FPS" is the command to fetch FPS
+                if (response?.response) {
+                    server.retryCounts.fps = 0;
+                    return response;
+                }
+                server.retryCounts.fps = attempt;
+                // Wait before retrying, with increasing wait times
+                await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+            }
+        };
+        const fps = await fetchFPSWithRetry();
+        const newFPS = fps.response?.env?.fps; // Assuming the response structure is like { env: { fps: "30.25" } }
+        if (newFPS) {
+            // Emit the FPS update event
+            this._manager.events.emit(constants_1.RCEEvent.ServerFPS, {
+                server,
+                fps: newFPS, // Emit the new FPS value
+            });
+            this._manager.logger.debug(`[${server.identifier}] FPS Updated: ${newFPS}`);
+        }
+        else {
+            this._manager.logger.warn(`[${server.identifier}] Failed To Retrieve Valid FPS`);
         }
     }
     /**
