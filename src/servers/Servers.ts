@@ -148,7 +148,7 @@ export default class ServerManager {
               if (s?.status === "RUNNING") {
                 this.updatePlayers(opts.identifier);
               }
-            }, 30000)
+            }, 60000)
             : undefined,
         },
         radioRefreshing: {
@@ -159,7 +159,7 @@ export default class ServerManager {
               if (s?.status === "RUNNING") {
                 this.updateBroadcasters(opts.identifier);
               }
-            }, 30000)
+            }, 60000)
             : undefined,
         },
         extendedEventRefreshing: {
@@ -170,7 +170,7 @@ export default class ServerManager {
               if (s?.status === "RUNNING") {
                 this.fetchGibs(opts.identifier);
               }
-            }, 30000)
+            }, 60000)
             : undefined,
         },
       },
@@ -824,10 +824,8 @@ export default class ServerManager {
 
       const data = await response.json();
       const fetchedServers: FetchedServer[] = data?.items
-        ?.filter((s: { label: string | string[]; }) => s.label.includes("Rust"))
-        .map((s: { items: {
-          label: any; data: { url: string; }; 
-}[]; }) => {
+        ?.filter((s) => s.label.includes("Rust"))
+        .map((s) => {
           return {
             rawName: s.items[0].label,
             name: s.items[0].label.replace(/<color=[^>]+>|<\/color>/g, ""),
