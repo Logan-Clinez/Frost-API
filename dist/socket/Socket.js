@@ -79,7 +79,7 @@ class GPortalSocket {
                     return ServerUtils_1.default.error(this._manager, `WebSocket Error: ${data.payload?.message}`);
                 }
                 if (data.type === "connection_ack") {
-                    return this._manager.logger.info("RCE.JS - Authenticated");
+                    return this._manager.logger.info("Frost API - Authenticated");
                 }
                 if (data.type === "data") {
                     const request = this._requests.get(data.id);

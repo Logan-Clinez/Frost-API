@@ -100,7 +100,7 @@ export interface SpecialEventSetEventPayload extends EventPayload {
     event: "Easter" | "Halloween" | "Xmas" | "HalloweenPortal" | "XmasPortal";
 }
 export interface EventStartEventPayload extends EventPayload {
-    event: "Airdrop" | "Cargo Ship" | "Chinook" | "Patrol Helicopter" | "Halloween" | "Christmas" | "Small Oil Rig" | "Oil Rig" | "Bradley APC Debris" | "Patrol Helicopter Debris" | "Bradley Event";
+    event: "Airdrop" | "Cargo Ship" | "Chinook" | "Patrol Helicopter" | "Halloween" | "Christmas" | "Small Oil Rig" | "Oil Rig" | "Bradley APC Debris" | "Patrol Helicopter Debris";
     special: boolean;
 }
 export interface PlayerKillEventPayload extends EventPayload {
@@ -124,7 +124,7 @@ export interface ErrorEventPayload {
     error: string;
     server?: RustServer;
 }
-export interface TimeEventPayload {
+export interface ServerTimeEventPayload {
     server: RustServer;
     time: string;
 }
@@ -161,7 +161,7 @@ export interface RCEEventTypes {
     [RCEEvent.FrequencyGained]: FrequencyGainedEventPayload;
     [RCEEvent.FrequencyLost]: FrequencyLostEventPayload;
     [RCEEvent.Error]: ErrorEventPayload;
-    [RCEEvent.Time]: TimeEventPayload;
+    [RCEEvent.ServerTime]: ServerTimeEventPayload;
     [RCEEvent.ServerFPS]: ServerFPSEventPayload;
 }
 export {};

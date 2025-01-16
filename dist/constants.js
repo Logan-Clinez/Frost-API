@@ -349,7 +349,7 @@ var RCEEvent;
     RCEEvent["FrequencyGained"] = "FREQUENCY_GAINED";
     RCEEvent["FrequencyLost"] = "FREQUENCY_LOST";
     RCEEvent["Error"] = "ERROR";
-    RCEEvent["Time"] = "TIME";
+    RCEEvent["ServerTime"] = "SERVER_TIME";
     RCEEvent["ServerFPS"] = "SERVER_FPS";
 })(RCEEvent || (exports.RCEEvent = RCEEvent = {}));
 var QuickChat;

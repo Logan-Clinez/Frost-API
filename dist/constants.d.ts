@@ -46,7 +46,7 @@ export declare enum RCEEvent {
     FrequencyGained = "FREQUENCY_GAINED",
     FrequencyLost = "FREQUENCY_LOST",
     Error = "ERROR",
-    Time = "TIME",
+    ServerTime = "SERVER_TIME",
     ServerFPS = "SERVER_FPS"
 }
 export declare enum QuickChat {
