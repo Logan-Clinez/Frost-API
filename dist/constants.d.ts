@@ -46,7 +46,7 @@ export declare enum RCEEvent {
     FrequencyGained = "FREQUENCY_GAINED",
     FrequencyLost = "FREQUENCY_LOST",
     Error = "ERROR",
-    ServerTimeUpdated = "SERVER_TIME_UPDATED"
+    Time = "TIME"
 }
 export declare enum QuickChat {
     COMBAT_WereUnderAttack = "d11_quick_chat_combat_slot_0",
