@@ -136,8 +136,7 @@ export interface EventStartEventPayload extends EventPayload {
     | "Small Oil Rig"
     | "Oil Rig"
     | "Bradley APC Debris"
-    | "Patrol Helicopter Debris"
-    | "Bradley Event";
+    | "Patrol Helicopter Debris";
   special: boolean;
 }
 
@@ -167,7 +166,7 @@ export interface ErrorEventPayload {
   server?: RustServer;
 }
 
-export interface TimeEventPayload {
+export interface ServerTimeEventPayload {
   server: RustServer;
   time: string;
 }
@@ -206,6 +205,6 @@ export interface RCEEventTypes {
   [RCEEvent.FrequencyGained]: FrequencyGainedEventPayload;
   [RCEEvent.FrequencyLost]: FrequencyLostEventPayload;
   [RCEEvent.Error]: ErrorEventPayload;
-  [RCEEvent.Time]: TimeEventPayload;
+  [RCEEvent.ServerTime]: ServerTimeEventPayload;
   [RCEEvent.ServerFPS]: ServerFPSEventPayload;
 }

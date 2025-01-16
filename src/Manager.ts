@@ -110,7 +110,7 @@ export default class RCEManager {
     this._auth.destroy();
     CommandHandler.destroy();
 
-    this.logger.info("RCE.JS - Closed Gracefully");
+    this.logger.info("Frost API - Closed Gracefully");
   }
 
   /**

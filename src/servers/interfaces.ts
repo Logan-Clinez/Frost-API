@@ -20,7 +20,7 @@ export interface FetchedServer {
 
 export interface RustServer {
   identifier: string;
-  serverId: number[]; // url, backend
+  serverId: number[];
   region: "EU" | "US";
   intervals: RustServerIntervals;
   flags: string[];

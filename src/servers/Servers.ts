@@ -773,7 +773,7 @@ export default class ServerManager {
         .match(/(\d+)/)?.[0] || null;
   
       if (extractedTime) {
-        this._manager.events.emit(RCEEvent.Time, {
+        this._manager.events.emit(RCEEvent.ServerTime, {
           server,
           time: extractedTime,
         });

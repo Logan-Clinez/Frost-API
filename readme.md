@@ -1,4 +1,4 @@
-# rce.js
+# Frost API
 
 > A library for developers to easily create their own Rust Console Edition integrations such as discord bots using GPORTAL's API & WebSocket!
 
@@ -15,7 +15,7 @@ npm i frost-api
 ## Example Usage - TypeScript
 
 ```typescript
-import { RCEManager, LogLevel, RCEEvent, RCEIntent } from "rce.js";
+import { RCEManager, LogLevel, RCEEvent, RCEIntent } from "frost-api";
 
 const rce = new RCEManager();
 await rce.init({ username: "", password: "" }, { level: LogLevel.Info });
@@ -58,5 +58,5 @@ rce.servers.removeAll(); // Remove All Servers
 rce.servers.get("identifier"); // Get Server
 await rce.servers.info("identifier"); // Get "serverinfo" Command Details
 await rce.servers.command("identifier", "say Hello World"); // Send Command
-rce.destroy(); // Gracefully Close RCE.JS
+rce.destroy(); // Gracefully Close Frost API
 ```

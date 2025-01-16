@@ -90,7 +90,7 @@ class RCEManager {
         this.servers.removeAll();
         this._auth.destroy();
         CommandHandler_1.default.destroy();
-        this.logger.info("RCE.JS - Closed Gracefully");
+        this.logger.info("Frost API - Closed Gracefully");
     }
     /**
      * Register a plugin with the RCE Manager

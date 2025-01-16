@@ -107,7 +107,7 @@ export default class GPortalSocket {
         }
 
         if (data.type === "connection_ack") {
-          return this._manager.logger.info("RCE.JS - Authenticated");
+          return this._manager.logger.info("Frost API - Authenticated");
         }
 
         if (data.type === "data") {
