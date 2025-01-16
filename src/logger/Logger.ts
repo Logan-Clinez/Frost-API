@@ -85,7 +85,7 @@ export default class RCELogger implements ILogger {
   debug(message: string) {
     const logType: LogType = {
       prefix: "[DEBUG]",
-      emoji: "🔧",
+      emoji: "🔧 ",
       color: ConsoleColor.FgGreen,
     };
 
@@ -105,7 +105,7 @@ export default class RCELogger implements ILogger {
   error(message: string) {
     const logType: LogType = {
       prefix: "[ERROR]",
-      emoji: "❌",
+      emoji: "❌ ",
       color: ConsoleColor.FgRed,
     };
 
@@ -125,7 +125,7 @@ export default class RCELogger implements ILogger {
   info(message: string) {
     const logType: LogType = {
       prefix: "[INFO]",
-      emoji: "💬",
+      emoji: "💬 ",
       color: ConsoleColor.FgCyan,
     };
 
