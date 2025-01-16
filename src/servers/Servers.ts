@@ -816,17 +816,21 @@ export default class ServerManager {
   
     const newTime = time.response?.env?.time; // Assuming the response structure is like { env: { time: "15.32967" } }
   
-    if (newTime) {
+    // Regex to extract the numeric time (including decimals)
+    const timeRegex = /(\d+(\.\d+)?)/;
+    const extractedTime = newTime ? newTime.match(timeRegex)?.[0] : null;
+  
+    if (extractedTime) {
       this._manager.events.emit(RCEEvent.ServerTimeUpdated, {
         server,
-        time: newTime, // Emit the new time
+        time: extractedTime, // Emit the extracted time
       });
   
-      this._manager.logger.debug(`[${server.identifier}] Time Updated: ${newTime}`);
+      this._manager.logger.debug(`[${server.identifier}] Time Updated: ${extractedTime}`);
     } else {
       this._manager.logger.warn(`[${server.identifier}] Failed To Retrieve Valid Time`);
     }
-  }
+  }  
   
 
   /**
