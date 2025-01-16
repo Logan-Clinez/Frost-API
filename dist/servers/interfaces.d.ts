@@ -7,6 +7,7 @@ export interface ServerOptions {
     radioRefreshing?: boolean;
     extendedEventRefreshing?: boolean;
     intents: string[];
+    timeRefreshing?: boolean;
 }
 export interface FetchedServer {
     rawName: string;
@@ -15,6 +16,7 @@ export interface FetchedServer {
     sid: number[];
 }
 export interface RustServer {
+    time: number | null;
     retryCounts: any;
     identifier: string;
     serverId: number[];
@@ -37,6 +39,10 @@ interface RustServerIntervals {
         interval?: NodeJS.Timeout;
     };
     extendedEventRefreshing?: {
+        enabled: boolean;
+        interval?: NodeJS.Timeout;
+    };
+    timeRefreshing?: {
         enabled: boolean;
         interval?: NodeJS.Timeout;
     };
