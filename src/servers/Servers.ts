@@ -718,7 +718,10 @@ export default class ServerManager {
     }
 
   // New Bradley Event based on "brad"
-  if (brad.response.includes("bradleyapc") && !server.flags.includes("BRAD")) {
+  if (
+    heli.response.includes("bradleyapc") &&
+    !server.flags.includes("BRAD")
+  ) {
     server.flags.push("BRAD");
 
     setTimeout(() => {
@@ -731,7 +734,7 @@ export default class ServerManager {
 
     this._manager.events.emit(RCEEvent.EventStart, {
       server,
-      event: "Bradley Event", // New event for "brad"
+      event: "Bradley Event",
       special: false,
     });
   }
