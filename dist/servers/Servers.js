@@ -563,7 +563,7 @@ class ServerManager {
             });
         }
         // New Bradley Event based on "brad"
-        if (heli.response.includes("bradleyapc") &&
+        if (brad.response.includes("bradleyapc") &&
             !server.flags.includes("BRAD")) {
             server.flags.push("BRAD");
             setTimeout(() => {
