@@ -174,23 +174,12 @@ export default class ServerManager {
             : undefined,
         },
         timeRefreshing: {
-          enabled: opts.timeRefreshing ?? false,
+          enabled: opts.timeRefreshing ?? true,
           interval: opts.timeRefreshing
             ? setInterval(() => {
                 const s = this.get(opts.identifier);
                 if (s?.status === "RUNNING") {
-                  this.updateTime(opts.identifier);
-                }
-              }, 60000)
-            : undefined,
-        },
-        teamInfoAllRefreshing: {
-          enabled: opts.teamInfoAllRefreshing ?? false,
-          interval: opts.teamInfoAllRefreshing
-            ? setInterval(() => {
-                const s = this.get(opts.identifier);
-                if (s?.status === "RUNNING") {
-                  this.updateTeamInfo(opts.identifier); // Call the new updateTeamInfo method
+                  this.updateTime(opts.identifier); // Call the new updateTime method
                 }
               }, 60000)
             : undefined,
@@ -229,10 +218,6 @@ export default class ServerManager {
 
       if (opts.timeRefreshing) {
         await this.updateTime(opts.identifier); // Directly calling updateTime here if required
-      }
-
-      if (opts.teamInfoAllRefreshing) {
-        await this.updateTeamInfo(opts.identifier);
       }
     }
 
@@ -841,60 +826,7 @@ export default class ServerManager {
     } else {
       this._manager.logger.warn(`[${server.identifier}] Failed To Retrieve Valid Time`);
     }
-  }    
-
-  private async updateTeamInfo(identifier: string) {
-    const server = this.get(identifier);
-    if (!server) {
-      return this._manager.logger.warn(
-        `[${identifier}] Failed To Update Team Info: Invalid Server`
-      );
-    }
-  
-    this._manager.logger.debug(`[${server.identifier}] Updating Team Info`);
-  
-    const response = await this.command(server.identifier, "relationshipmanager.teaminfoall", true);
-  
-    if (!response?.response) {
-      return this._manager.logger.warn(`[${server.identifier}] No valid response for Team Info`);
-    }
-  
-    // Parse response
-    const lines = response.response.split("\n");
-    const teamLine = lines[0].match(/Team (\d+)/);
-    const teamId = teamLine?.[1] || "Unknown";
-  
-    const members: { name: string; id: string }[] = [];
-    let leader: { name: string; id: string } | null = null;
-  
-    for (const line of lines.slice(1)) {
-      const leaderMatch = line.includes("(LEADER)");
-      const memberMatch = line.match(/(.*?)\s\[(\d+)\]/);
-  
-      if (memberMatch) {
-        const [_, name, id] = memberMatch;
-        const member = { name, id };
-        if (leaderMatch) {
-          leader = member;
-        }
-        members.push(member);
-      }
-    }
-  
-    if (!leader) {
-      this._manager.logger.warn(`[${server.identifier}] No leader found in team ${teamId}`);
-    }
-  
-    // Emit the event
-    this._manager.events.emit(RCEEvent.TeamInfoAll, {
-      server,
-      teamId,
-      leader: leader || { name: "Unknown", id: "Unknown" },
-      members,
-    });
-  
-    this._manager.logger.debug(`[${server.identifier}] Team Info Updated: Team ${teamId}`);
-  }  
+  }
 
   /**
    *
