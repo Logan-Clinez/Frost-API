@@ -9,7 +9,7 @@ For a more in-depth documentation, refer to [GitBook](https://frosty-bot-api.git
 ## Installation
 
 ```bash
-npm i Logan-Clinez/Frost-API
+npm i frost-api
 ```
 
 ## Example Usage - TypeScript
