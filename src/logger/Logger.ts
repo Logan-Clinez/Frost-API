@@ -68,7 +68,7 @@ export default class RCELogger implements ILogger {
       const date = new Date();
       const timestamp = date.toLocaleTimeString([], { hour12: true });
       const padding = " ".repeat(Math.max(0, 15 - logType.prefix.length));
-      const formattedMessage = `${ConsoleColor.FgCyan}${ConsoleColor.Bold}[${timestamp}]${ConsoleColor.Reset} ${logType.color}${logType.prefix} ${padding}${logType.emoji}${ConsoleColor.Reset}`;
+      const formattedMessage = `${ConsoleColor.FgCyan}${ConsoleColor.Bold}[${timestamp}]${ConsoleColor.Reset} ${logType.color}${logType.prefix} ${padding}${logType.emoji} ${ConsoleColor.Reset}`;
 
       console.log(formattedMessage, this.format(message));
     }
