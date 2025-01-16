@@ -14,7 +14,7 @@ export default class ServiceSensorHandler {
     manager.events.emit(RCEEvent.ServiceSensor, {
       server,
       cpuPercentage: Number(cpuTotal.toFixed(2)),
-      memoryUsed: memory.used / (1024 * 1024 * 1024),
+      memoryUsed: memory.used / 1024,
     });
   }
 }
