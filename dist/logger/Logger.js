@@ -10,6 +10,8 @@ var ConsoleColor;
     ConsoleColor["FgGreen"] = "\u001B[32m";
     ConsoleColor["FgYellow"] = "\u001B[33m";
     ConsoleColor["FgCyan"] = "\u001B[36m";
+    ConsoleColor["Bold"] = "\u001B[1m";
+    ConsoleColor["Underline"] = "\u001B[4m"; // Added underline for emphasis
 })(ConsoleColor || (ConsoleColor = {}));
 class RCELogger {
     logLevel = constants_1.LogLevel.Info;
@@ -55,9 +57,9 @@ class RCELogger {
         this.logToFile(logType.prefix, message);
         if (this.logLevel !== constants_1.LogLevel.None && level <= this.logLevel) {
             const date = new Date();
-            const timestamp = date.toLocaleTimeString([], { hour12: false });
+            const timestamp = date.toLocaleTimeString([], { hour12: true });
             const padding = " ".repeat(Math.max(0, 15 - logType.prefix.length));
-            const formattedMessage = `\x1b[90m[${timestamp}]\x1b[0m ${logType.color}${logType.prefix}${padding}${logType.emoji}${ConsoleColor.Reset}`;
+            const formattedMessage = `${ConsoleColor.FgCyan}${ConsoleColor.Bold}[${timestamp}]${ConsoleColor.Reset} ${logType.color}${logType.prefix} ${padding}${logType.emoji}${ConsoleColor.Reset}`;
             console.log(formattedMessage, this.format(message));
         }
     }
@@ -74,7 +76,7 @@ class RCELogger {
     debug(message) {
         const logType = {
             prefix: "[DEBUG]",
-            emoji: "🔧 ",
+            emoji: "🔧",
             color: ConsoleColor.FgGreen,
         };
         this.log(constants_1.LogLevel.Debug, logType, message);
@@ -92,7 +94,7 @@ class RCELogger {
     error(message) {
         const logType = {
             prefix: "[ERROR]",
-            emoji: "❌ ",
+            emoji: "❌",
             color: ConsoleColor.FgRed,
         };
         this.log(constants_1.LogLevel.Error, logType, message);
@@ -110,7 +112,7 @@ class RCELogger {
     info(message) {
         const logType = {
             prefix: "[INFO]",
-            emoji: "💬 ",
+            emoji: "💬",
             color: ConsoleColor.FgCyan,
         };
         this.log(constants_1.LogLevel.Info, logType, message);
@@ -128,7 +130,7 @@ class RCELogger {
     warn(message) {
         const logType = {
             prefix: "[WARNING]",
-            emoji: "⚠️ ",
+            emoji: "⚠️",
             color: ConsoleColor.FgYellow,
         };
         this.log(constants_1.LogLevel.Warn, logType, message);

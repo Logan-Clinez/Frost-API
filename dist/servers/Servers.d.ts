@@ -1,7 +1,7 @@
+import type { ServerOptions, RustServer, CommandResponse, RustServerInformation, FetchedServer } from "./interfaces";
 import type GPortalAuth from "../auth/Auth";
 import type GPortalSocket from "../socket/Socket";
 import type RCEManager from "../Manager";
-import type { ServerOptions, RustServer, CommandResponse, RustServerInformation, FetchedServer } from "./interfaces";
 export default class ServerManager {
     private _manager;
     private _auth;
