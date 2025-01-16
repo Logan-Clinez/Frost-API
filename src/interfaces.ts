@@ -166,6 +166,11 @@ export interface ErrorEventPayload {
   server?: RustServer;
 }
 
+export interface ServerTimeUpdatedEventPayload {
+  server: RustServer;
+  time: string;
+}
+
 export interface RCEEventTypes {
   [RCEEvent.Message]: MessageEventPayload;
   [RCEEvent.ServerReady]: ServerReadyEventPayload;
@@ -195,4 +200,5 @@ export interface RCEEventTypes {
   [RCEEvent.FrequencyGained]: FrequencyGainedEventPayload;
   [RCEEvent.FrequencyLost]: FrequencyLostEventPayload;
   [RCEEvent.Error]: ErrorEventPayload;
+  [RCEEvent.ServerTimeUpdated]: ServerTimeUpdatedEventPayload;
 }

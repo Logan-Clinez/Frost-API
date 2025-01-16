@@ -6,6 +6,7 @@ export interface ServerOptions {
   playerRefreshing?: boolean;
   radioRefreshing?: boolean;
   extendedEventRefreshing?: boolean;
+  timeRefreshing?: boolean;
   intents: string[];
 }
 
@@ -42,6 +43,7 @@ interface RustServerIntervals {
   playerRefreshing?: { enabled: boolean; interval?: NodeJS.Timeout };
   radioRefreshing?: { enabled: boolean; interval?: NodeJS.Timeout };
   extendedEventRefreshing?: { enabled: boolean; interval?: NodeJS.Timeout };
+  timeRefreshing?: { enabled: boolean; interval?: NodeJS.Timer };
 }
 
 export interface CommandRequest {

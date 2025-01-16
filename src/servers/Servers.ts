@@ -173,6 +173,17 @@ export default class ServerManager {
             }, 60000)
             : undefined,
         },
+        timeRefreshing: {
+          enabled: opts.timeRefreshing ?? true,
+          interval: opts.timeRefreshing
+            ? setInterval(() => {
+                const s = this.get(opts.identifier);
+                if (s?.status === "RUNNING") {
+                  this.updateTime(opts.identifier); // Call the new updateTime method
+                }
+              }, 60000)
+            : undefined,
+        },
       },
       flags: [],
       state: opts.state ?? [],
@@ -203,6 +214,10 @@ export default class ServerManager {
 
       if (opts.extendedEventRefreshing) {
         await this.fetchGibs(opts.identifier);
+      }
+
+      if (opts.timeRefreshing) {
+        await this.updateTime(opts.identifier); // Directly calling updateTime here if required
       }
     }
 
@@ -765,7 +780,54 @@ export default class ServerManager {
     });
   
     this._manager.logger.debug(`[${server.identifier}] Players Updated`);
-  }  
+  }
+  
+  private async updateTime(identifier: string) {
+    const server = this.get(identifier);
+    if (!server) {
+      return this._manager.logger.warn(
+        `[${identifier}] Failed To Update Time: Invalid Server`
+      );
+    }
+  
+    this._manager.logger.debug(`[${server.identifier}] Updating Time`);
+  
+    server.retryCounts = server.retryCounts || { time: 0 };
+  
+    const fetchTimeWithRetry = async (): Promise<any> => {
+      let attempt = 0;
+      while (true) {
+        attempt += 1;
+        const response = await this.command(server.identifier, "Time", true);
+  
+        if (response?.response) {
+          server.retryCounts.time = 0;
+          return response;
+        }
+  
+        server.retryCounts.time = attempt;
+  
+        // Wait before retrying, with increasing wait times
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+      }
+    };
+  
+    const time = await fetchTimeWithRetry();
+  
+    const newTime = time.response?.env?.time; // Assuming the response structure is like { env: { time: "15.32967" } }
+  
+    if (newTime) {
+      this._manager.events.emit(RCEEvent.ServerTimeUpdated, {
+        server,
+        time: newTime, // Emit the new time
+      });
+  
+      this._manager.logger.debug(`[${server.identifier}] Time Updated: ${newTime}`);
+    } else {
+      this._manager.logger.warn(`[${server.identifier}] Failed To Retrieve Valid Time`);
+    }
+  }
+  
 
   /**
    *
