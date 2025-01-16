@@ -530,15 +530,18 @@ class ServerManager {
                 attempt += 1;
                 const bradley = await this.command(server.identifier, "find_entity servergibs_bradley", true);
                 const heli = await this.command(server.identifier, "find_entity servergibs_patrolhelicopter", true);
-                if (bradley?.response && heli?.response) {
+                const brad = await this.command(server.identifier, "find_entity brad", // added brad check
+                true);
+                if (bradley?.response && heli?.response && brad?.response) {
                     server.retryCounts.gibs = 0;
-                    return { bradley, heli };
+                    return { bradley, heli, brad }; // Include brad in the return object
                 }
                 server.retryCounts.gibs = attempt;
                 await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
             }
         };
-        const { bradley, heli } = await fetchGibsWithRetry();
+        const { bradley, heli, brad } = await fetchGibsWithRetry();
+        // Bradley Debris
         if (bradley.response.includes("servergibs_bradley") &&
             !server.flags.includes("BRADLEY")) {
             server.flags.push("BRADLEY");
@@ -555,6 +558,7 @@ class ServerManager {
                 special: false,
             });
         }
+        // Helicopter Debris
         if (heli.response.includes("servergibs_patrolhelicopter") &&
             !server.flags.includes("HELICOPTER")) {
             server.flags.push("HELICOPTER");
@@ -568,6 +572,22 @@ class ServerManager {
             this._manager.events.emit(constants_1.RCEEvent.EventStart, {
                 server,
                 event: "Patrol Helicopter Debris",
+                special: false,
+            });
+        }
+        // New Bradley Event based on "brad"
+        if (brad.response.includes("brad") && !server.flags.includes("BRAD")) {
+            server.flags.push("BRAD");
+            setTimeout(() => {
+                const s = this.get(server.identifier);
+                if (s) {
+                    s.flags = s.flags.filter((f) => f !== "BRAD");
+                    this.update(s);
+                }
+            }, 60_000 * 10);
+            this._manager.events.emit(constants_1.RCEEvent.EventStart, {
+                server,
+                event: "Bradley Event", // New event for "brad"
                 special: false,
             });
         }
