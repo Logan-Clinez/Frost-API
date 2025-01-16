@@ -75,12 +75,6 @@ export default class GPortalSocket {
 
       if (code !== 1000) {
         if (this._connectionAttempts < 5) {
-          this._manager.logger.warn(
-            `WebSocket Connection Closed - Reconnecting in 10 Seconds (Attempt ${
-              this._connectionAttempts + 1
-            })`
-          );
-
           setTimeout(
             () => this.connect(true),
             (this._connectionAttempts + 1) * 10_000
@@ -92,7 +86,7 @@ export default class GPortalSocket {
         }
       } else {
         throw new Error(`WS connection closed (${code}): ${reason}`);
-      }
+      }      
     });
 
     this._socket.on("message", (message) => {
