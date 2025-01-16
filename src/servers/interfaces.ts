@@ -1,5 +1,4 @@
 export interface ServerOptions {
-  timeRefreshing: boolean;
   identifier: string;
   serverId: number | number[];
   region: "EU" | "US";
@@ -8,6 +7,7 @@ export interface ServerOptions {
   radioRefreshing?: boolean;
   extendedEventRefreshing?: boolean;
   intents: string[];
+  timeRefreshing?: boolean;
 }
 
 export interface FetchedServer {
