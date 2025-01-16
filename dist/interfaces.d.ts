@@ -128,6 +128,18 @@ export interface TimeEventPayload {
     server: RustServer;
     time: string;
 }
+export interface TeamInfoAllUpdatedEventPayload {
+    server: RustServer;
+    teamId: string;
+    leader: {
+        name: string;
+        id: string;
+    };
+    members: {
+        name: string;
+        id: string;
+    }[];
+}
 export interface RCEEventTypes {
     [RCEEvent.Message]: MessageEventPayload;
     [RCEEvent.ServerReady]: ServerReadyEventPayload;
@@ -158,5 +170,6 @@ export interface RCEEventTypes {
     [RCEEvent.FrequencyLost]: FrequencyLostEventPayload;
     [RCEEvent.Error]: ErrorEventPayload;
     [RCEEvent.Time]: TimeEventPayload;
+    [RCEEvent.TeamInfoAll]: TeamInfoAllUpdatedEventPayload;
 }
 export {};
