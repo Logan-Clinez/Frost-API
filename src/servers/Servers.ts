@@ -815,7 +815,8 @@ export default class ServerManager {
     const time = await fetchTimeWithRetry();
   
     // Directly use the response time value
-    const extractedTime = time.response || null;
+    const extractedTime = time.response
+    .match(/(\d+\.\d+)/)?.[0] || null;
   
     if (extractedTime) {
       this._manager.events.emit(RCEEvent.ServerTimeUpdated, {
