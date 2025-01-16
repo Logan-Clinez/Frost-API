@@ -59,7 +59,6 @@ class GPortalSocket {
             this.close();
             if (code !== 1000) {
                 if (this._connectionAttempts < 5) {
-                    this._manager.logger.warn(`WebSocket Connection Closed - Reconnecting in 10 Seconds (Attempt ${this._connectionAttempts + 1})`);
                     setTimeout(() => this.connect(true), (this._connectionAttempts + 1) * 10_000);
                 }
                 else {
@@ -97,7 +96,6 @@ class GPortalSocket {
                         if (match) {
                             const status = match[1].trim();
                             if (status === "StatusCode.UNAVAILABLE") {
-                                this._manager.logger.warn(`[${server.identifier}] AioRpcError: Server Is Unavailable, Recreating in 2 Minutes...`);
                                 this._manager.servers.remove(server);
                                 setTimeout(() => this._manager.servers.add({
                                     identifier: server.identifier,

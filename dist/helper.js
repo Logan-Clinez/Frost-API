@@ -12,7 +12,7 @@ class Helper {
             return null;
         let cleanOutput = output.replace(/\\n/g, "").trim();
         if (!rawHostname) {
-            cleanOutput = cleanOutput.replace(/<color=[^>]+>|<\/color>/g, "");
+            cleanOutput = cleanOutput.replace(/<[^>]+>/g, "");
         }
         try {
             const jsonObject = JSON.parse(cleanOutput);
