@@ -21,7 +21,7 @@ export default class Helper {
     let cleanOutput = output.replace(/\\n/g, "").trim();
 
     if (!rawHostname) {
-      cleanOutput = cleanOutput.replace(/<color=[^>]+>|<\/color>/g, "");
+      cleanOutput = cleanOutput.replace(/<[^>]+>/g, "");
     }
 
     try {
