@@ -150,33 +150,33 @@ export default class ServerManager {
           enabled: opts.playerRefreshing ?? false,
           interval: opts.playerRefreshing
             ? setInterval(() => {
-                const s = this.get(opts.identifier);
-                if (s?.status === "RUNNING") {
-                  this.updatePlayers(opts.identifier);
-                }
-              }, 60_000)
+              const s = this.get(opts.identifier);
+              if (s?.status === "RUNNING") {
+                this.updatePlayers(opts.identifier);
+              }
+            }, 60000)
             : undefined,
         },
         radioRefreshing: {
           enabled: opts.radioRefreshing ?? false,
           interval: opts.radioRefreshing
             ? setInterval(() => {
-                const s = this.get(opts.identifier);
-                if (s?.status === "RUNNING") {
-                  this.updateBroadcasters(opts.identifier);
-                }
-              }, 30_000)
+              const s = this.get(opts.identifier);
+              if (s?.status === "RUNNING") {
+                this.updateBroadcasters(opts.identifier);
+              }
+            }, 30000)
             : undefined,
         },
         extendedEventRefreshing: {
           enabled: opts.extendedEventRefreshing ?? false,
           interval: opts.extendedEventRefreshing
             ? setInterval(() => {
-                const s = this.get(opts.identifier);
-                if (s?.status === "RUNNING") {
-                  this.fetchGibs(opts.identifier);
-                }
-              }, 60_000)
+              const s = this.get(opts.identifier);
+              if (s?.status === "RUNNING") {
+                this.fetchGibs(opts.identifier);
+              }
+            }, 60000)
             : undefined,
         },
       },
@@ -186,6 +186,7 @@ export default class ServerManager {
       players: [],
       frequencies: [],
       intents: opts.intents,
+      retryCounts: undefined
     });
 
     const server = this._servers.get(opts.identifier);
@@ -284,7 +285,6 @@ export default class ServerManager {
     this._socket.removeServer(server);
     this._servers.delete(server.identifier);
 
-    this._manager.logger.info(`[${server.identifier}] Server Removed`);
   }
 
   /**
@@ -518,33 +518,46 @@ export default class ServerManager {
     }
   }
 
-  private async updateBroadcasters(identifier) {
+  private async updateBroadcasters(identifier: string) {
     const server = this.get(identifier);
     if (!server) {
       return this._manager.logger.warn(
         `[${identifier}] Failed To Update Broadcasters: Invalid Server`
       );
     }
-
+  
     this._manager.logger.debug(`[${server.identifier}] Updating Broadcasters`);
-
-    const broadcasters = await this.command(
-      server.identifier,
-      "rf.listboardcaster",
-      true
-    );
-    if (!broadcasters?.response) {
-      return this._manager.logger.warn(
-        `[${server.identifier}] Failed To Update Broadcasters`
-      );
-    }
-
+  
+    server.retryCounts = server.retryCounts || { broadcasters: 0 };
+  
+    const fetchBroadcastersWithRetry = async (): Promise<any> => {
+      let attempt = 0;
+      while (true) {
+        attempt += 1;
+        const response = await this.command(
+          server.identifier,
+          "rf.listboardcaster",
+          true
+        );
+  
+        if (response?.response) {
+          server.retryCounts.broadcasters = 0;
+          return response;
+        }
+  
+        server.retryCounts.broadcasters = attempt;
+  
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+      }
+    };
+  
+    const broadcasters = await fetchBroadcastersWithRetry();
+  
     const broadcasts = [];
-
     const regex =
       /\[(\d+) MHz\] Position: \(([\d.-]+), ([\d.-]+), ([\d.-]+)\), Range: (\d+)/g;
     let match;
-
+  
     while ((match = regex.exec(broadcasters.response)) !== null) {
       const frequency = parseInt(match[1], 10);
       const coordinates = [
@@ -553,25 +566,25 @@ export default class ServerManager {
         parseFloat(match[4]),
       ];
       const range = parseInt(match[5], 10);
-
+  
       broadcasts.push({ frequency, coordinates, range });
     }
-
+  
     server.frequencies.forEach((freq) => {
       if (!broadcasts.find((b) => parseInt(b.frequency) === freq)) {
         this._manager.events.emit(RCEEvent.FrequencyLost, {
           server,
           frequency: freq,
         });
-
+  
         server.frequencies = server.frequencies.filter((f) => f !== freq);
       }
     });
-
+  
     broadcasts.forEach((broadcast) => {
       if (server.frequencies.includes(broadcast.frequency)) return;
       server.frequencies.push(broadcast.frequency);
-
+  
       if (broadcast.frequency === 4765) {
         this._manager.events.emit(RCEEvent.EventStart, {
           server,
@@ -585,7 +598,7 @@ export default class ServerManager {
           special: false,
         });
       }
-
+  
       this._manager.events.emit(RCEEvent.FrequencyGained, {
         server,
         frequency: broadcast.frequency,
@@ -593,11 +606,11 @@ export default class ServerManager {
         range: broadcast.range,
       });
     });
-
+  
     this.update(server);
-
+  
     this._manager.logger.debug(`[${server.identifier}] Broadcasters Updated`);
-  }
+  }  
 
   private async fetchGibs(identifier: string) {
     const server = this.get(identifier);
