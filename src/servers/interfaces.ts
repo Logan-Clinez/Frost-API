@@ -7,7 +7,7 @@ export interface ServerOptions {
   radioRefreshing?: boolean;
   extendedEventRefreshing?: boolean;
   timeRefreshing?: boolean;
-  teamInfoAllRefreshing: boolean;
+  teamInfoAllRefreshing?: boolean;
   intents: string[];
 }
 

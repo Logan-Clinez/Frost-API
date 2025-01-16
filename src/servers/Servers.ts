@@ -174,7 +174,7 @@ export default class ServerManager {
             : undefined,
         },
         timeRefreshing: {
-          enabled: opts.timeRefreshing ?? true,
+          enabled: opts.timeRefreshing ?? false,
           interval: opts.timeRefreshing
             ? setInterval(() => {
                 const s = this.get(opts.identifier);
@@ -185,7 +185,7 @@ export default class ServerManager {
             : undefined,
         },
         teamInfoAllRefreshing: {
-          enabled: opts.teamInfoAllRefreshing ?? true,
+          enabled: opts.teamInfoAllRefreshing ?? false,
           interval: opts.teamInfoAllRefreshing
             ? setInterval(() => {
                 const s = this.get(opts.identifier);
