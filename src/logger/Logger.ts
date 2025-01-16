@@ -9,8 +9,15 @@ enum ConsoleColor {
   FgGreen = "\x1b[32m",
   FgYellow = "\x1b[33m",
   FgCyan = "\x1b[36m",
-  Bold = "\x1b[1m",  // Added bold for emphasis
-  Underline = "\x1b[4m"  // Added underline for emphasis
+  FgBlue = "\x1b[34m",
+  FgMagenta = "\x1b[35m",
+  FgWhite = "\x1b[97m",
+  FgGray = "\x1b[90m",
+  FgLightCyan = "\x1b[96m",
+  BgBlack = "\x1b[40m",
+  BgGray = "\x1b[48;5;235m",
+  Bold = "\x1b[1m",
+  Underline = "\x1b[4m"
 }
 
 export default class RCELogger implements ILogger {
@@ -68,7 +75,7 @@ export default class RCELogger implements ILogger {
       const date = new Date();
       const timestamp = date.toLocaleTimeString([], { hour12: true });
       const padding = " ".repeat(Math.max(0, 15 - logType.prefix.length));
-      const formattedMessage = `${ConsoleColor.FgCyan}${ConsoleColor.Bold}[${timestamp}]${ConsoleColor.Reset} ${logType.color}${logType.prefix} ${padding}${logType.emoji} ${ConsoleColor.Reset}`;
+      const formattedMessage = `${ConsoleColor.BgBlack}${ConsoleColor.FgWhite}${ConsoleColor.Bold}[${timestamp}]${ConsoleColor.Reset} ${logType.color}${logType.prefix}${padding}${logType.emoji}${ConsoleColor.Reset} `;
 
       console.log(formattedMessage, this.format(message));
     }
