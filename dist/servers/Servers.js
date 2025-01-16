@@ -563,7 +563,8 @@ class ServerManager {
             });
         }
         // New Bradley Event based on "brad"
-        if (brad.response.includes("bradleyapc") && !server.flags.includes("BRAD")) {
+        if (heli.response.includes("bradleyapc") &&
+            !server.flags.includes("BRAD")) {
             server.flags.push("BRAD");
             setTimeout(() => {
                 const s = this.get(server.identifier);
@@ -574,7 +575,7 @@ class ServerManager {
             }, 60_000 * 10);
             this._manager.events.emit(constants_1.RCEEvent.EventStart, {
                 server,
-                event: "Bradley Event", // New event for "brad"
+                event: "Bradley Event",
                 special: false,
             });
         }
