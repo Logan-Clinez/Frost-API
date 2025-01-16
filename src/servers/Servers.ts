@@ -619,32 +619,45 @@ export default class ServerManager {
         `[${identifier}] Failed To Fetch Gibs: Invalid Server`
       );
     }
-
+  
     this._manager.logger.debug(`[${server.identifier}] Fetching Gibs`);
-
-    const bradley = await this.command(
-      server.identifier,
-      "find_entity servergibs_bradley",
-      true
-    );
-    const heli = await this.command(
-      server.identifier,
-      "find_entity servergibs_patrolhelicopter",
-      true
-    );
-
-    if (!bradley?.response || !heli?.response) {
-      return this._manager.logger.warn(
-        `[${server.identifier}] Failed To Fetch Gibs`
-      );
-    }
-
+  
+    server.retryCounts = server.retryCounts || { gibs: 0 };
+  
+    const fetchGibsWithRetry = async (): Promise<any> => {
+      let attempt = 0;
+      while (true) {
+        attempt += 1;
+        const bradley = await this.command(
+          server.identifier,
+          "find_entity servergibs_bradley",
+          true
+        );
+        const heli = await this.command(
+          server.identifier,
+          "find_entity servergibs_patrolhelicopter",
+          true
+        );
+  
+        if (bradley?.response && heli?.response) {
+          server.retryCounts.gibs = 0;
+          return { bradley, heli };
+        }
+  
+        server.retryCounts.gibs = attempt;
+  
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+      }
+    };
+  
+    const { bradley, heli } = await fetchGibsWithRetry();
+  
     if (
       bradley.response.includes("servergibs_bradley") &&
       !server.flags.includes("BRADLEY")
     ) {
       server.flags.push("BRADLEY");
-
+  
       setTimeout(() => {
         const s = this.get(server.identifier);
         if (s) {
@@ -652,20 +665,20 @@ export default class ServerManager {
           this.update(s);
         }
       }, 60_000 * 10);
-
+  
       this._manager.events.emit(RCEEvent.EventStart, {
         server,
         event: "Bradley APC Debris",
         special: false,
       });
     }
-
+  
     if (
       heli.response.includes("servergibs_patrolhelicopter") &&
       !server.flags.includes("HELICOPTER")
     ) {
       server.flags.push("HELICOPTER");
-
+  
       setTimeout(() => {
         const s = this.get(server.identifier);
         if (s) {
@@ -673,18 +686,18 @@ export default class ServerManager {
           this.update(s);
         }
       }, 60_000 * 10);
-
+  
       this._manager.events.emit(RCEEvent.EventStart, {
         server,
         event: "Patrol Helicopter Debris",
         special: false,
       });
     }
-
+  
     this.update(server);
-
+  
     this._manager.logger.debug(`[${server.identifier}] Gibs Fetched`);
-  }
+  }  
 
   private async updatePlayers(identifier: string) {
     const server = this.get(identifier);
