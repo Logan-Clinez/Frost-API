@@ -167,7 +167,6 @@ export default class ServerManager {
     private fetchGibs;
     private updatePlayers;
     private updateTime;
-    private updateTeamInfo;
     /**
      *
      * @param region - The region to fetch servers from
