@@ -719,7 +719,7 @@ export default class ServerManager {
 
   // New Bradley Event based on "brad"
   if (
-    heli.response.includes("bradleyapc") &&
+    brad.response.includes("bradleyapc") &&
     !server.flags.includes("BRAD")
   ) {
     server.flags.push("BRAD");
