@@ -15,6 +15,7 @@ export interface FetchedServer {
     sid: number[];
 }
 export interface RustServer {
+    retryCounts: any;
     identifier: string;
     serverId: number[];
     region: "EU" | "US";

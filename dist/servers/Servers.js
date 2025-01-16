@@ -111,7 +111,7 @@ class ServerManager {
                             if (s?.status === "RUNNING") {
                                 this.updatePlayers(opts.identifier);
                             }
-                        }, 60_000)
+                        }, 60000)
                         : undefined,
                 },
                 radioRefreshing: {
@@ -122,7 +122,7 @@ class ServerManager {
                             if (s?.status === "RUNNING") {
                                 this.updateBroadcasters(opts.identifier);
                             }
-                        }, 30_000)
+                        }, 30000)
                         : undefined,
                 },
                 extendedEventRefreshing: {
@@ -133,7 +133,7 @@ class ServerManager {
                             if (s?.status === "RUNNING") {
                                 this.fetchGibs(opts.identifier);
                             }
-                        }, 60_000)
+                        }, 60000)
                         : undefined,
                 },
             },
@@ -143,6 +143,7 @@ class ServerManager {
             players: [],
             frequencies: [],
             intents: opts.intents,
+            retryCounts: undefined
         });
         const server = this._servers.get(opts.identifier);
         this._socket.addServer(server);
@@ -225,7 +226,6 @@ class ServerManager {
         clearInterval(server.intervals.extendedEventRefreshing.interval);
         this._socket.removeServer(server);
         this._servers.delete(server.identifier);
-        this._manager.logger.info(`[${server.identifier}] Server Removed`);
     }
     /**
      *
@@ -326,61 +326,7 @@ class ServerManager {
             },
             query: "mutation sendConsoleMessage($sid: Int!, $region: REGION!, $message: String!) {\n  sendConsoleMessage(rsid: {id: $sid, region: $region}, message: $message) {\n    ok\n    __typename\n  }\n}",
         };
-        if (response) {
-            return new Promise(async (resolve, reject) => {
-                CommandHandler_1.default.add({
-                    identifier,
-                    command,
-                    resolve,
-                    reject,
-                });
-                try {
-                    const response = await fetch(constants_1.GPortalRoutes.Api, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${token}`,
-                        },
-                        body: JSON.stringify(payload),
-                    });
-                    if (!response.ok) {
-                        ServerUtils_1.default.error(this._manager, `Failed To Send Command: HTTP ${response.status} ${response.statusText}`, server);
-                        CommandHandler_1.default.remove(CommandHandler_1.default.get(identifier, command));
-                        resolve({
-                            ok: false,
-                            error: `HTTP ${response.status} ${response.statusText}`,
-                        });
-                    }
-                    const data = await response.json();
-                    if (!data?.data?.sendConsoleMessage?.ok) {
-                        ServerUtils_1.default.error(this._manager, "Failed To Send Command: AioRpcError", server);
-                        CommandHandler_1.default.remove(CommandHandler_1.default.get(identifier, command));
-                        resolve({
-                            ok: false,
-                            error: "AioRpcError",
-                        });
-                    }
-                    const cmd = CommandHandler_1.default.get(identifier, command);
-                    if (cmd) {
-                        cmd.timeout = setTimeout(() => {
-                            CommandHandler_1.default.remove(CommandHandler_1.default.get(identifier, command));
-                            resolve({
-                                ok: true,
-                                response: undefined,
-                            });
-                        }, 3_000);
-                    }
-                }
-                catch (error) {
-                    CommandHandler_1.default.remove(CommandHandler_1.default.get(identifier, command));
-                    resolve({
-                        ok: false,
-                        error: error.message,
-                    });
-                }
-            });
-        }
-        else {
+        const retryCommand = async (attempt = 1) => {
             try {
                 const response = await fetch(constants_1.GPortalRoutes.Api, {
                     method: "POST",
@@ -391,11 +337,40 @@ class ServerManager {
                     body: JSON.stringify(payload),
                 });
                 if (!response.ok) {
-                    ServerUtils_1.default.error(this._manager, `Failed To Send Command: HTTP ${response.status} ${response.statusText}`, server);
-                    return {
-                        ok: false,
-                        error: `HTTP ${response.status} ${response.statusText}`,
-                    };
+                    if (attempt < 5) {
+                        this._manager.logger.warn(`[${identifier}] Retry ${attempt}/5: Failed To Send Command (HTTP ${response.status} ${response.statusText})`);
+                        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+                        return retryCommand(attempt + 1);
+                    }
+                    else {
+                        ServerUtils_1.default.error(this._manager, `Failed To Send Command: HTTP ${response.status} ${response.statusText}`, server);
+                        return {
+                            ok: false,
+                            error: `HTTP ${response.status} ${response.statusText}`,
+                        };
+                    }
+                }
+                const data = await response.json();
+                if (!data?.data?.sendConsoleMessage?.ok) {
+                    if (attempt < 5) {
+                        this._manager.logger.warn(`[${identifier}] Retry ${attempt}/5: Failed To Send Command (AioRpcError)`);
+                        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+                        return retryCommand(attempt + 1);
+                    }
+                    else {
+                        ServerUtils_1.default.error(this._manager, "Failed To Send Command: AioRpcError", server);
+                        return { ok: false, error: "AioRpcError" };
+                    }
+                }
+                const cmd = CommandHandler_1.default.get(identifier, command);
+                if (cmd) {
+                    cmd.timeout = setTimeout(() => {
+                        CommandHandler_1.default.remove(CommandHandler_1.default.get(identifier, command));
+                        resolve({
+                            ok: true,
+                            response: undefined,
+                        });
+                    }, 3_000);
                 }
                 return {
                     ok: true,
@@ -403,12 +378,22 @@ class ServerManager {
                 };
             }
             catch (error) {
-                ServerUtils_1.default.error(this._manager, `Failed To Send Command: ${error}`, server);
-                return {
-                    ok: false,
-                    error: error.message,
-                };
+                if (attempt < 5) {
+                    this._manager.logger.warn(`[${identifier}] Retry ${attempt}/5: Failed To Send Command: ${error.message}`);
+                    await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+                    return retryCommand(attempt + 1);
+                }
+                else {
+                    ServerUtils_1.default.error(this._manager, `Failed To Send Command: ${error.message}`, server);
+                    return { ok: false, error: error.message };
+                }
             }
+        };
+        if (response) {
+            return retryCommand();
+        }
+        else {
+            return retryCommand();
         }
     }
     async updateBroadcasters(identifier) {
@@ -417,10 +402,21 @@ class ServerManager {
             return this._manager.logger.warn(`[${identifier}] Failed To Update Broadcasters: Invalid Server`);
         }
         this._manager.logger.debug(`[${server.identifier}] Updating Broadcasters`);
-        const broadcasters = await this.command(server.identifier, "rf.listboardcaster", true);
-        if (!broadcasters?.response) {
-            return this._manager.logger.warn(`[${server.identifier}] Failed To Update Broadcasters`);
-        }
+        server.retryCounts = server.retryCounts || { broadcasters: 0 };
+        const fetchBroadcastersWithRetry = async () => {
+            let attempt = 0;
+            while (true) {
+                attempt += 1;
+                const response = await this.command(server.identifier, "rf.listboardcaster", true);
+                if (response?.response) {
+                    server.retryCounts.broadcasters = 0;
+                    return response;
+                }
+                server.retryCounts.broadcasters = attempt;
+                await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+            }
+        };
+        const broadcasters = await fetchBroadcastersWithRetry();
         const broadcasts = [];
         const regex = /\[(\d+) MHz\] Position: \(([\d.-]+), ([\d.-]+), ([\d.-]+)\), Range: (\d+)/g;
         let match;
@@ -477,11 +473,22 @@ class ServerManager {
             return this._manager.logger.warn(`[${identifier}] Failed To Fetch Gibs: Invalid Server`);
         }
         this._manager.logger.debug(`[${server.identifier}] Fetching Gibs`);
-        const bradley = await this.command(server.identifier, "find_entity servergibs_bradley", true);
-        const heli = await this.command(server.identifier, "find_entity servergibs_patrolhelicopter", true);
-        if (!bradley?.response || !heli?.response) {
-            return this._manager.logger.warn(`[${server.identifier}] Failed To Fetch Gibs`);
-        }
+        server.retryCounts = server.retryCounts || { gibs: 0 };
+        const fetchGibsWithRetry = async () => {
+            let attempt = 0;
+            while (true) {
+                attempt += 1;
+                const bradley = await this.command(server.identifier, "find_entity servergibs_bradley", true);
+                const heli = await this.command(server.identifier, "find_entity servergibs_patrolhelicopter", true);
+                if (bradley?.response && heli?.response) {
+                    server.retryCounts.gibs = 0;
+                    return { bradley, heli };
+                }
+                server.retryCounts.gibs = attempt;
+                await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+            }
+        };
+        const { bradley, heli } = await fetchGibsWithRetry();
         if (bradley.response.includes("servergibs_bradley") &&
             !server.flags.includes("BRADLEY")) {
             server.flags.push("BRADLEY");
@@ -523,10 +530,21 @@ class ServerManager {
             return this._manager.logger.warn(`[${identifier}] Failed To Update Players: Invalid Server`);
         }
         this._manager.logger.debug(`[${server.identifier}] Updating Players`);
-        const players = await this.command(server.identifier, "Users", true);
-        if (!players?.response) {
-            return this._manager.logger.warn(`[${server.identifier}] Failed To Update Players`);
-        }
+        server.retryCounts = server.retryCounts || { players: 0 };
+        const fetchPlayersWithRetry = async () => {
+            let attempt = 0;
+            while (true) {
+                attempt += 1;
+                const response = await this.command(server.identifier, "Users", true);
+                if (response?.response) {
+                    server.retryCounts.players = 0;
+                    return response;
+                }
+                server.retryCounts.players = attempt;
+                await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+            }
+        };
+        const players = await fetchPlayersWithRetry();
         const playerlist = players.response
             .match(/"(.*?)"/g)
             .map((ign) => ign.replace(/"/g, ""));
@@ -713,4 +731,7 @@ class ServerManager {
     }
 }
 exports.default = ServerManager;
+function resolve(arg0) {
+    throw new Error("Function not implemented.");
+}
 //# sourceMappingURL=Servers.js.map
