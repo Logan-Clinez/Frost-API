@@ -10,8 +10,15 @@ var ConsoleColor;
     ConsoleColor["FgGreen"] = "\u001B[32m";
     ConsoleColor["FgYellow"] = "\u001B[33m";
     ConsoleColor["FgCyan"] = "\u001B[36m";
+    ConsoleColor["FgBlue"] = "\u001B[34m";
+    ConsoleColor["FgMagenta"] = "\u001B[35m";
+    ConsoleColor["FgWhite"] = "\u001B[97m";
+    ConsoleColor["FgGray"] = "\u001B[90m";
+    ConsoleColor["FgLightCyan"] = "\u001B[96m";
+    ConsoleColor["BgBlack"] = "\u001B[40m";
+    ConsoleColor["BgGray"] = "\u001B[48;5;235m";
     ConsoleColor["Bold"] = "\u001B[1m";
-    ConsoleColor["Underline"] = "\u001B[4m"; // Added underline for emphasis
+    ConsoleColor["Underline"] = "\u001B[4m";
 })(ConsoleColor || (ConsoleColor = {}));
 class RCELogger {
     logLevel = constants_1.LogLevel.Info;
@@ -59,7 +66,7 @@ class RCELogger {
             const date = new Date();
             const timestamp = date.toLocaleTimeString([], { hour12: true });
             const padding = " ".repeat(Math.max(0, 15 - logType.prefix.length));
-            const formattedMessage = `${ConsoleColor.FgCyan}${ConsoleColor.Bold}[${timestamp}]${ConsoleColor.Reset} ${logType.color}${logType.prefix} ${padding}${logType.emoji} ${ConsoleColor.Reset}`;
+            const formattedMessage = `${ConsoleColor.BgBlack}${ConsoleColor.FgWhite}${ConsoleColor.Bold}[${timestamp}]${ConsoleColor.Reset} ${logType.color}${logType.prefix}${padding}${logType.emoji}${ConsoleColor.Reset} `;
             console.log(formattedMessage, this.format(message));
         }
     }
