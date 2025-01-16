@@ -667,25 +667,24 @@ class ServerManager {
             let attempt = 0;
             while (true) {
                 attempt += 1;
-                const response = await this.command(server.identifier, "FPS", true); // Assume "FPS" is the command to fetch FPS
+                const response = await this.command(server.identifier, "server.fps", true);
                 if (response?.response) {
                     server.retryCounts.fps = 0;
                     return response;
                 }
                 server.retryCounts.fps = attempt;
-                // Wait before retrying, with increasing wait times
                 await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
             }
         };
         const fps = await fetchFPSWithRetry();
-        const newFPS = fps.response?.env?.fps; // Assuming the response structure is like { env: { fps: "30.25" } }
-        if (newFPS) {
+        const FPS = fps.response;
+        if (FPS) {
             // Emit the FPS update event
             this._manager.events.emit(constants_1.RCEEvent.ServerFPS, {
                 server,
-                fps: newFPS, // Emit the new FPS value
+                fps: FPS,
             });
-            this._manager.logger.debug(`[${server.identifier}] FPS Updated: ${newFPS}`);
+            this._manager.logger.debug(`[${server.identifier}] FPS Updated: ${FPS}`);
         }
         else {
             this._manager.logger.warn(`[${server.identifier}] Failed To Retrieve Valid FPS`);
