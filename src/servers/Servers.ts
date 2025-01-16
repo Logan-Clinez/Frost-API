@@ -1,14 +1,8 @@
+import type { ServerOptions, RustServer, CommandResponse, RustServerInformation, FetchedServer } from "./interfaces";
+import { GPortalRoutes, RCEEvent } from "../constants";
 import type GPortalAuth from "../auth/Auth";
 import type GPortalSocket from "../socket/Socket";
 import type RCEManager from "../Manager";
-import { GPortalRoutes, RCEEvent } from "../constants";
-import type {
-  ServerOptions,
-  RustServer,
-  CommandResponse,
-  RustServerInformation,
-  FetchedServer,
-} from "./interfaces";
 import ServerUtils from "../util/ServerUtils";
 import CommandHandler from "./CommandHandler";
 import Helper from "../helper";
